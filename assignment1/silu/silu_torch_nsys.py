@@ -6,11 +6,15 @@ def silu(x: torch.Tensor) -> torch.Tensor:
 
 
 if __name__ == "__main__":
+    num_warmups = 20
+    num_iters = 100
+
     t = torch.randn(8192, 8192, device="cpu")
     t = t.to("cuda")
+    for _ in range(num_warmups):
+        silu(t)
     torch.cuda.synchronize()
 
-    num_iters = 100
     start = torch.cuda.Event(enable_timing=True)
     end = torch.cuda.Event(enable_timing=True)
     start.record()
