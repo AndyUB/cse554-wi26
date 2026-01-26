@@ -1,5 +1,4 @@
 import torch
-from torch.profiler import profile, record_function, ProfilerActivity
 
 
 def silu(x: torch.Tensor) -> torch.Tensor:
@@ -7,31 +6,19 @@ def silu(x: torch.Tensor) -> torch.Tensor:
 
 
 if __name__ == "__main__":
-    num_warmups = 5
-    num_iters = 20
-
-    t = torch.randn(8192, 8192, device="cuda")
-    for _ in range(num_warmups):
-        silu(t)
+    t = torch.randn(8192, 8192, device="cpu")
+    t = t.to("cuda")
     torch.cuda.synchronize()
 
+    num_iters = 100
     start = torch.cuda.Event(enable_timing=True)
     end = torch.cuda.Event(enable_timing=True)
-
     start.record()
-    with profile(
-        activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
-        profile_memory=True,
-        with_stack=True,
-        record_shapes=True,
-    ) as prof:
-        with record_function("silu"):
-            for i in range(num_iters):
-                silu(t)
+    for i in range(num_iters):
+        silu(t)
     end.record()
     torch.cuda.synchronize()
 
-    prof.export_chrome_trace("torch_silu.json")
     total_elapse = start.elapsed_time(end) / 1000  # in seconds
     elapse = total_elapse / num_iters
     bandwidth = t.element_size() * t.numel() * 2 / elapse / 1e9  # in GB/s
