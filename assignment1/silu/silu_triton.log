@@ -1,0 +1,7 @@
+Silu Triton correctness test passed!
+Block size: 64, Elapse: 1.404894 ms, Bandwidth: 382.14 GB/s
+Block size: 128, Elapse: 0.949453 ms, Bandwidth: 565.45 GB/s
+Block size: 256, Elapse: 0.948024 ms, Bandwidth: 566.31 GB/s
+Block size: 512, Elapse: 0.948774 ms, Bandwidth: 565.86 GB/s
+Block size: 1024, Elapse: 0.949219 ms, Bandwidth: 565.59 GB/s
+Best block size: 256, Elapse: 0.948024 ms, Bandwidth: 566.31 GB/s

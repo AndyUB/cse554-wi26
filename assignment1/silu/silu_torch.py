@@ -14,7 +14,7 @@ if __name__ == "__main__":
     else:
         mode = "torch_profiler"
 
-    if mode not in ["torch_profiler", "nsys"]:
+    if mode not in ["torch_profiler", "nsys", "test"]:
         raise ValueError(f"Unsupported mode: {mode}")
 
     num_warmups = 5
@@ -22,6 +22,14 @@ if __name__ == "__main__":
 
     t = torch.randn(8192, 8192, device="cpu")
     t = t.to("cuda")
+    if mode == "test":
+        ref_silu = torch.nn.SiLU()
+        result = silu(t)
+        ref = ref_silu(t)
+        assert torch.allclose(result, ref)
+        print("Test passed!")
+        sys.exit(0)
+
     for _ in range(num_warmups):
         silu(t)
     torch.cuda.synchronize()
