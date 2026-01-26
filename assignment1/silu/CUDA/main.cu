@@ -5,9 +5,6 @@
 
 
 int main() {
-    int num_warmups = 5;
-    int num_iters = 20;
-
     size_t num = 8192 * 8192;
 
     float * host_inp = new float[num];
@@ -27,37 +24,13 @@ int main() {
     cudaMemcpy(d_inp, host_inp, num * sizeof(float), cudaMemcpyHostToDevice);
     cudaMemcpy(d_out, host_out, num * sizeof(float), cudaMemcpyHostToDevice);
 
-    for (int i = 0; i < num_warmups; i++) {
-        silu(d_inp, d_out, num);
-    }
+    silu(d_inp, d_out, num);
     cudaDeviceSynchronize();
     cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess) {
         std::cerr << "CUDA error: " << cudaGetErrorString(err) << std::endl;
         return -1;
     }
-
-    cudaEvent_t start, stop;
-    cudaEventCreate(&start);
-    cudaEventCreate(&stop);
-    cudaEventRecord(start);
-    for (int i = 0; i < num_iters; i++) {
-        silu(d_inp, d_out, num);
-    }
-    cudaEventRecord(stop);
-    cudaDeviceSynchronize();
-    err = cudaGetLastError();
-    if (err != cudaSuccess) {
-        std::cerr << "CUDA error: " << cudaGetErrorString(err) << std::endl;
-        return -1;
-    }
-
-    float total_elapse = 0.0f;
-    cudaEventElapsedTime(&total_elapse, start, stop);
-    float elapse = total_elapse / num_iters;
-    float bandwidth = (num * sizeof(float) * 2) / (elapse / 1000.0f) / (1e9); // GB/s
-    std::cout << "Average time per iteration: " << elapse << " ms" << std::endl;
-    std::cout << "Bandwidth: " << bandwidth << " GB/s" << std::endl;
 
     // Copy result back to host
     cudaMemcpy(host_out, d_out, num * sizeof(float), cudaMemcpyDeviceToHost);
