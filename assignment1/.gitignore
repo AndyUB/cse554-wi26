@@ -1,2 +1,4 @@
 !torch_silu.nsys-rep
 !cuda_silu.ncu-rep
+!rms_norm_matrix.ncu-rep
+!rms_norm_vector.ncu-rep
