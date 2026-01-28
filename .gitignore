@@ -11,4 +11,4 @@ trace.json
 *.DS_Store
 __pycache__/
 *.pyc
-!a1-submit/*
+!a1-submit/**/*
