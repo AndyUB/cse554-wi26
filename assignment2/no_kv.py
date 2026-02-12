@@ -168,7 +168,7 @@ class Engine:
     def timed_generate(
         self, input_ids: list[int], num_rounds: int, time_rounds: list[int]
     ):
-        output_ids = input_ids
+        output_ids = input_ids.copy()
 
         start_event = torch.cuda.Event(enable_timing=True)
         end_events: dict[int, torch.cuda.Event] = {}
@@ -185,11 +185,11 @@ class Engine:
         output_ids.append(new_token)
 
         for round in range(2, num_rounds + 1):
-            new_token = self.run(output_ids[-1:], prefill=False)
+            new_token = self.run(output_ids, prefill=True)
             output_ids.append(new_token)
             if round in time_rounds:
                 end_events[round].record()
-            end_times[round] = time.perf_counter()
+                end_times[round] = time.perf_counter()
 
         torch.cuda.synchronize()
         timings_cuda = {

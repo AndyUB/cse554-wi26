@@ -69,7 +69,7 @@ class Engine:
             if prefill or current_layer not in self.kv_cache:
                 offset = 0
             else:
-                offset = self.kv_cache[current_layer]["k"].shape[1]
+                offset = self.kv_cache[current_layer]["k"].shape[0]
             apply_rope(q, output=q, head_dim=self.head_dim, offset=offset)
             apply_rope(k, output=k, head_dim=self.head_dim, offset=offset)
 
@@ -148,6 +148,7 @@ class Engine:
         return output_text
 
     def generate_from_ids(self, input_ids: list[int], rounds: int = 20):
+        self.kv_cache.clear()
         output_ids = input_ids.copy()
 
         new_token = self.run(output_ids)
@@ -163,8 +164,8 @@ class Engine:
     def timed_generate(
         self, input_ids: list[int], num_rounds: int, time_rounds: list[int]
     ):
-
-        output_ids = input_ids
+        self.kv_cache.clear()
+        output_ids = input_ids.copy()
         start_event = torch.cuda.Event(enable_timing=True)
         end_events: dict[int, torch.cuda.Event] = {}
         for time_round in time_rounds:

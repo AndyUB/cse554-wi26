@@ -54,39 +54,39 @@ def main():
         rows.append(
             {
                 "output_len": output_len,
-                "no_kv_s": no_kv_times_cuda[output_len],
-                "kv_s": kv_times_cuda[output_len],
+                "no_kv_ms": no_kv_times_cuda[output_len],
+                "kv_ms": kv_times_cuda[output_len],
             }
         )
         print(
             f"output_len={output_len:4d} | "
             f"no_kv_time_cuda={no_kv_times_cuda[output_len]:.2f}ms | "
             f"kv_time_cuda={kv_times_cuda[output_len]:.2f}ms | "
-            f"no_kv_time_wall={no_kv_times_wall[output_len]:.2f}s | "
-            f"kv_time_wall={kv_times_wall[output_len]:.2f}s"
+            f"no_kv_time_wall={no_kv_times_wall[output_len]:.2f}ms | "
+            f"kv_time_wall={kv_times_wall[output_len]:.2f}ms"
         )
 
     csv_path = args.out_dir / "single_batch_times.csv"
     with csv_path.open("w", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=["output_len", "no_kv_s", "kv_s"])
+        writer = csv.DictWriter(f, fieldnames=["output_len", "no_kv_ms", "kv_ms"])
         writer.writeheader()
         writer.writerows(rows)
 
     plt.figure(figsize=(8, 5))
     plt.plot(
         [r["output_len"] for r in rows],
-        [r["no_kv_s"] for r in rows],
+        [r["no_kv_ms"] for r in rows],
         marker="o",
         label="No KV cache",
     )
     plt.plot(
         [r["output_len"] for r in rows],
-        [r["kv_s"] for r in rows],
+        [r["kv_ms"] for r in rows],
         marker="o",
         label="KV cache",
     )
     plt.xlabel("Output length (tokens)")
-    plt.ylabel("Generation time (s)")
+    plt.ylabel("Generation time (ms)")
     plt.title("Single-batch generation time vs output length")
     plt.grid(True, alpha=0.3)
     plt.legend()
