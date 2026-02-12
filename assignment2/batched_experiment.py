@@ -22,10 +22,22 @@ def build_prompt(tokenizer, target_len: int, seed_text: str):
     return tokenizer.decode(ids, skip_special_tokens=True)
 
 
-def benchmark_uniform(engine, prompts, output_len: int):
-    if hasattr(engine, "reset_cache"):
-        engine.reset_cache()
+def build_varied_prompts(tokenizer, batch_size: int, base_len: int, delta: int):
+    prompts = []
+    for i in range(batch_size):
+        length = max(8, base_len + ((i % 3) - 1) * delta)
+        prompts.append(
+            build_prompt(
+                tokenizer,
+                target_len=length,
+                seed_text=f"Prompt {i}: testing ",
+            )
+        )
+    return prompts
 
+
+def benchmark_uniform(engine, prompts, output_len: int):
+    engine.reset_cache()
     torch.cuda.synchronize()
     start = time.perf_counter()
     engine.generate_batched(prompts, rounds=output_len)
@@ -34,9 +46,7 @@ def benchmark_uniform(engine, prompts, output_len: int):
 
 
 def benchmark_different(engine, prompts, output_len: int):
-    if hasattr(engine, "reset_cache"):
-        engine.reset_cache()
-
+    engine.reset_cache()
     torch.cuda.synchronize()
     start = time.perf_counter()
     engine.generate_batched(prompts, rounds=output_len)
@@ -49,10 +59,14 @@ def main():
     parser.add_argument("--input-len", type=int, default=512)
     parser.add_argument("--output-len", type=int, default=128)
     parser.add_argument("--max-batch-pow", type=int, default=6)
-    parser.add_argument("--repeats", type=int, default=3)
+    parser.add_argument("--repeats", type=int, default=1)
     parser.add_argument(
-        "--out-dir", type=Path, default=Path("assignment2/results/part2")
+        "--different-len-delta",
+        type=int,
+        default=128,
+        help="Length delta used to create mixed prompt lengths for different_prefill.",
     )
+    parser.add_argument("--out-dir", type=Path, default=Path("results/batched"))
     args = parser.parse_args()
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
@@ -70,14 +84,12 @@ def main():
     batch_sizes = [2**i for i in range(args.max_batch_pow + 1)]
     for batch_size in batch_sizes:
         uniform_prompts = [base_prompt for _ in range(batch_size)]
-        different_prompts = [
-            build_prompt(
-                different_engine.tokenizer,
-                target_len=args.input_len,
-                seed_text=f"Prompt {i}: artificial profiling text. ",
-            )
-            for i in range(batch_size)
-        ]
+        different_prompts = build_varied_prompts(
+            different_engine.tokenizer,
+            batch_size=batch_size,
+            base_len=args.input_len,
+            delta=args.different_len_delta,
+        )
 
         uniform_times = [
             benchmark_uniform(
@@ -115,7 +127,7 @@ def main():
             f"different: {different_time:.4f}s, {different_tps:.1f} tok/s"
         )
 
-    csv_path = args.out_dir / "part2_batch_profile.csv"
+    csv_path = args.out_dir / "batch_profile.csv"
     with csv_path.open("w", newline="") as f:
         writer = csv.DictWriter(
             f,
@@ -146,10 +158,10 @@ def main():
     plt.xscale("log", base=2)
     plt.xlabel("Batch size")
     plt.ylabel("Generation time (s)")
-    plt.title("Part 2: Generation time vs batch size")
+    plt.title("Generation time vs batch size")
     plt.grid(True, alpha=0.3)
     plt.legend()
-    time_plot_path = args.out_dir / "part2_generation_time_vs_batch.png"
+    time_plot_path = args.out_dir / "generation_time_vs_batch.png"
     plt.tight_layout()
     plt.savefig(time_plot_path, dpi=150)
 
@@ -169,10 +181,10 @@ def main():
     plt.xscale("log", base=2)
     plt.xlabel("Batch size")
     plt.ylabel("Throughput (tokens/s)")
-    plt.title("Part 2: Throughput vs batch size")
+    plt.title("Throughput vs batch size")
     plt.grid(True, alpha=0.3)
     plt.legend()
-    tps_plot_path = args.out_dir / "part2_throughput_vs_batch.png"
+    tps_plot_path = args.out_dir / "throughput_vs_batch.png"
     plt.tight_layout()
     plt.savefig(tps_plot_path, dpi=150)
 

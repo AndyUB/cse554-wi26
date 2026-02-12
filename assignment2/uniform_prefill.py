@@ -42,18 +42,12 @@ class Engine:
         return x / rms
 
     def _apply_rope_batched(self, x: torch.Tensor, offset: int) -> None:
-        """x shape: [bsz, seq, num_heads * head_dim]."""
         for batch_idx in range(x.shape[0]):
             apply_rope(
                 x[batch_idx], output=x[batch_idx], head_dim=self.head_dim, offset=offset
             )
 
     def run(self, input_ids, prefill=True):
-        """
-        input_ids shapes:
-          * prefill=True:  [batch, prompt_len]
-          * prefill=False: [batch, 1]
-        """
         if not torch.is_tensor(input_ids):
             input_tensor = torch.tensor(input_ids, dtype=torch.int32, device="cuda")
         else:

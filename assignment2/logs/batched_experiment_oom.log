@@ -1,0 +1,28 @@
+Loading safetensors:   0%|          | 0/12 [00:00<?, ?it/s]Loading safetensors: 100%|██████████| 12/12 [00:00<00:00, 2556.72it/s]
+Loading safetensors:   0%|          | 0/12 [00:00<?, ?it/s]Loading safetensors: 100%|██████████| 12/12 [00:00<00:00, 2601.79it/s]
+batch= 1 | uniform: 3.7596s, 34.0 tok/s | different: 3.7947s, 33.7 tok/s
+batch= 2 | uniform: 4.3996s, 58.2 tok/s | different: 4.2302s, 60.5 tok/s
+batch= 4 | uniform: 6.6643s, 76.8 tok/s | different: 8.3307s, 61.5 tok/s
+batch= 8 | uniform: 12.0651s, 84.9 tok/s | different: 18.2466s, 56.1 tok/s
+batch=16 | uniform: 22.9321s, 89.3 tok/s | different: 29.8629s, 68.6 tok/s
+batch=32 | uniform: 44.7706s, 91.5 tok/s | different: 60.7032s, 67.5 tok/s
+Traceback (most recent call last):
+  File "/homes/iws/yhruan22/cse554-wi26/assignment2/batched_experiment.py", line 203, in <module>
+    main()
+  File "/homes/iws/yhruan22/cse554-wi26/assignment2/batched_experiment.py", line 107, in main
+    benchmark_different(
+  File "/homes/iws/yhruan22/cse554-wi26/assignment2/batched_experiment.py", line 56, in benchmark_different
+    engine.generate_batched(prompts, rounds=output_len)
+  File "/homes/iws/yhruan22/.local/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 116, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/homes/iws/yhruan22/cse554-wi26/assignment2/different_prefill.py", line 308, in generate_batched
+    new_tokens = self.run(output_ids_list, prefill=True)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/homes/iws/yhruan22/cse554-wi26/assignment2/different_prefill.py", line 291, in run
+    return self._run_layers_prefill(padded, attention_mask)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/homes/iws/yhruan22/cse554-wi26/assignment2/different_prefill.py", line 145, in _run_layers_prefill
+    logits = model_output.matmul(self.weights["lm_head_weight"].t())
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 8.18 GiB. GPU 0 has a total capacity of 23.46 GiB of which 3.74 GiB is free. Including non-PyTorch memory, this process has 19.72 GiB memory in use. Of the allocated memory 11.72 GiB is allocated by PyTorch, and 7.80 GiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)

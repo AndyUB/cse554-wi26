@@ -1,0 +1,12 @@
+Loading safetensors:   0%|          | 0/12 [00:00<?, ?it/s]Loading safetensors: 100%|██████████| 12/12 [00:00<00:00, 2326.72it/s]
+Loading safetensors:   0%|          | 0/12 [00:00<?, ?it/s]Loading safetensors: 100%|██████████| 12/12 [00:00<00:00, 2650.57it/s]
+batch= 1 | uniform: 3.9002s, 32.8 tok/s | different: 3.2046s, 39.9 tok/s
+batch= 2 | uniform: 4.8922s, 52.3 tok/s | different: 4.3332s, 59.1 tok/s
+batch= 4 | uniform: 6.5464s, 78.2 tok/s | different: 7.6025s, 67.3 tok/s
+batch= 8 | uniform: 11.8969s, 86.1 tok/s | different: 14.9759s, 68.4 tok/s
+batch=16 | uniform: 23.0938s, 88.7 tok/s | different: 28.6989s, 71.4 tok/s
+batch=32 | uniform: 45.8590s, 89.3 tok/s | different: 57.5389s, 71.2 tok/s
+batch=64 | uniform: 89.8701s, 91.2 tok/s | different: 109.6919s, 74.7 tok/s
+Saved CSV: assignment2/results/part2/part2_batch_profile.csv
+Saved plot: assignment2/results/part2/part2_generation_time_vs_batch.png
+Saved plot: assignment2/results/part2/part2_throughput_vs_batch.png
