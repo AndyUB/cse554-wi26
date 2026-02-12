@@ -1,0 +1,22 @@
+Loading safetensors:   0%|          | 0/12 [00:00<?, ?it/s]Loading safetensors: 100%|██████████| 12/12 [00:00<00:00, 2435.83it/s]
+pad_token=0, len(input_ids)=1024, num_rounds=2048
+Loading safetensors:   0%|          | 0/12 [00:00<?, ?it/s]Loading safetensors: 100%|██████████| 12/12 [00:00<00:00, 2504.93it/s]
+pad_token=0, len(input_ids)=1024, num_rounds=2048
+output_len= 128 | no_kv_time_cuda=3859.25ms | kv_time_cuda=3443.73ms | no_kv_time_wall=3859.30s | kv_time_wall=3443.72s
+output_len= 256 | no_kv_time_cuda=6522.88ms | kv_time_cuda=6060.34ms | no_kv_time_wall=6522.91s | kv_time_wall=6060.32s
+output_len= 384 | no_kv_time_cuda=9181.31ms | kv_time_cuda=8668.71ms | no_kv_time_wall=9181.33s | kv_time_wall=8668.69s
+output_len= 512 | no_kv_time_cuda=11839.43ms | kv_time_cuda=11273.82ms | no_kv_time_wall=11839.44s | kv_time_wall=11273.78s
+output_len= 640 | no_kv_time_cuda=14499.90ms | kv_time_cuda=13868.73ms | no_kv_time_wall=14499.89s | kv_time_wall=13868.69s
+output_len= 768 | no_kv_time_cuda=17145.59ms | kv_time_cuda=16465.79ms | no_kv_time_wall=17145.58s | kv_time_wall=16465.74s
+output_len= 896 | no_kv_time_cuda=19802.32ms | kv_time_cuda=19061.87ms | no_kv_time_wall=19802.30s | kv_time_wall=19061.82s
+output_len=1024 | no_kv_time_cuda=22448.98ms | kv_time_cuda=21655.18ms | no_kv_time_wall=22448.94s | kv_time_wall=21655.12s
+output_len=1152 | no_kv_time_cuda=25107.94ms | kv_time_cuda=24260.63ms | no_kv_time_wall=25107.89s | kv_time_wall=24260.57s
+output_len=1280 | no_kv_time_cuda=27752.11ms | kv_time_cuda=26856.70ms | no_kv_time_wall=27752.05s | kv_time_wall=26856.63s
+output_len=1408 | no_kv_time_cuda=30423.45ms | kv_time_cuda=29456.30ms | no_kv_time_wall=30423.38s | kv_time_wall=29456.23s
+output_len=1536 | no_kv_time_cuda=33083.78ms | kv_time_cuda=32063.74ms | no_kv_time_wall=33083.70s | kv_time_wall=32063.66s
+output_len=1664 | no_kv_time_cuda=35739.96ms | kv_time_cuda=34654.97ms | no_kv_time_wall=35739.88s | kv_time_wall=34654.90s
+output_len=1792 | no_kv_time_cuda=38386.16ms | kv_time_cuda=37230.41ms | no_kv_time_wall=38386.06s | kv_time_wall=37230.34s
+output_len=1920 | no_kv_time_cuda=41038.55ms | kv_time_cuda=39811.21ms | no_kv_time_wall=41038.44s | kv_time_wall=39811.13s
+output_len=2048 | no_kv_time_cuda=43684.55ms | kv_time_cuda=42388.48ms | no_kv_time_wall=43684.43s | kv_time_wall=42388.40s
+Saved CSV: results/single_batch/single_batch_times.csv
+Saved plot: results/single_batch/single_batch_generation_time.png

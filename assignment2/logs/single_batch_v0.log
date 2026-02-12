@@ -1,0 +1,82 @@
+Loading safetensors:   0%|          | 0/12 [00:00<?, ?it/s]Loading safetensors: 100%|██████████| 12/12 [00:00<00:00, 1842.23it/s]
+Loading safetensors:   0%|          | 0/12 [00:00<?, ?it/s]Loading safetensors: 100%|██████████| 12/12 [00:00<00:00, 2195.49it/s]
+Generation time (wall clock): 12.8555s | Generation time (CUDA events): 12.8554s | Output length: 128 | KV cache: False
+Generation time (wall clock): 12.7988s | Generation time (CUDA events): 12.7988s | Output length: 128 | KV cache: False
+Generation time (wall clock): 12.9783s | Generation time (CUDA events): 12.9782s | Output length: 128 | KV cache: False
+Generation time (wall clock): 2.6501s | Generation time (CUDA events): 2.6501s | Output length: 128 | KV cache: True
+Generation time (wall clock): 2.6037s | Generation time (CUDA events): 2.6037s | Output length: 128 | KV cache: True
+Generation time (wall clock): 2.6047s | Generation time (CUDA events): 2.6047s | Output length: 128 | KV cache: True
+output_len= 128 | no_kv=12.8775s | kv=2.6195s
+Generation time (wall clock): 28.5752s | Generation time (CUDA events): 28.5752s | Output length: 256 | KV cache: False
+Generation time (wall clock): 28.6800s | Generation time (CUDA events): 28.6799s | Output length: 256 | KV cache: False
+Generation time (wall clock): 28.9860s | Generation time (CUDA events): 28.9859s | Output length: 256 | KV cache: False
+Generation time (wall clock): 5.2598s | Generation time (CUDA events): 5.2597s | Output length: 256 | KV cache: True
+Generation time (wall clock): 6.7372s | Generation time (CUDA events): 6.7371s | Output length: 256 | KV cache: True
+Generation time (wall clock): 5.8988s | Generation time (CUDA events): 5.8988s | Output length: 256 | KV cache: True
+output_len= 256 | no_kv=28.7470s | kv=5.9652s
+Generation time (wall clock): 45.8748s | Generation time (CUDA events): 45.8747s | Output length: 384 | KV cache: False
+Generation time (wall clock): 46.4440s | Generation time (CUDA events): 46.4438s | Output length: 384 | KV cache: False
+Generation time (wall clock): 46.8105s | Generation time (CUDA events): 46.8103s | Output length: 384 | KV cache: False
+Generation time (wall clock): 10.0817s | Generation time (CUDA events): 10.0817s | Output length: 384 | KV cache: True
+Generation time (wall clock): 8.1996s | Generation time (CUDA events): 8.1995s | Output length: 384 | KV cache: True
+Generation time (wall clock): 9.0443s | Generation time (CUDA events): 9.0443s | Output length: 384 | KV cache: True
+output_len= 384 | no_kv=46.3763s | kv=9.1085s
+Generation time (wall clock): 65.7410s | Generation time (CUDA events): 65.7408s | Output length: 512 | KV cache: False
+Generation time (wall clock): 66.7318s | Generation time (CUDA events): 66.7316s | Output length: 512 | KV cache: False
+Generation time (wall clock): 66.2142s | Generation time (CUDA events): 66.2140s | Output length: 512 | KV cache: False
+Generation time (wall clock): 10.5213s | Generation time (CUDA events): 10.5212s | Output length: 512 | KV cache: True
+Generation time (wall clock): 10.2038s | Generation time (CUDA events): 10.2037s | Output length: 512 | KV cache: True
+Generation time (wall clock): 13.5168s | Generation time (CUDA events): 13.5167s | Output length: 512 | KV cache: True
+output_len= 512 | no_kv=66.2288s | kv=11.4139s
+Generation time (wall clock): 87.3831s | Generation time (CUDA events): 87.3828s | Output length: 640 | KV cache: False
+Generation time (wall clock): 88.1033s | Generation time (CUDA events): 88.1031s | Output length: 640 | KV cache: False
+Generation time (wall clock): 87.8517s | Generation time (CUDA events): 87.8514s | Output length: 640 | KV cache: False
+Generation time (wall clock): 12.9300s | Generation time (CUDA events): 12.9299s | Output length: 640 | KV cache: True
+Generation time (wall clock): 12.9640s | Generation time (CUDA events): 12.9639s | Output length: 640 | KV cache: True
+Generation time (wall clock): 12.8950s | Generation time (CUDA events): 12.8949s | Output length: 640 | KV cache: True
+output_len= 640 | no_kv=87.7791s | kv=12.9295s
+Generation time (wall clock): 112.0845s | Generation time (CUDA events): 112.0841s | Output length: 768 | KV cache: False
+Generation time (wall clock): 112.4711s | Generation time (CUDA events): 112.4706s | Output length: 768 | KV cache: False
+Generation time (wall clock): 112.0839s | Generation time (CUDA events): 112.0835s | Output length: 768 | KV cache: False
+Generation time (wall clock): 19.1347s | Generation time (CUDA events): 19.1346s | Output length: 768 | KV cache: True
+Generation time (wall clock): 17.9035s | Generation time (CUDA events): 17.9034s | Output length: 768 | KV cache: True
+Generation time (wall clock): 18.1564s | Generation time (CUDA events): 18.1563s | Output length: 768 | KV cache: True
+output_len= 768 | no_kv=112.2127s | kv=18.3981s
+Generation time (wall clock): 141.5624s | Generation time (CUDA events): 141.5620s | Output length: 896 | KV cache: False
+Generation time (wall clock): 138.8322s | Generation time (CUDA events): 138.8317s | Output length: 896 | KV cache: False
+Generation time (wall clock): 138.0415s | Generation time (CUDA events): 138.0411s | Output length: 896 | KV cache: False
+Generation time (wall clock): 23.4278s | Generation time (CUDA events): 23.4279s | Output length: 896 | KV cache: True
+Generation time (wall clock): 20.0968s | Generation time (CUDA events): 20.0969s | Output length: 896 | KV cache: True
+Generation time (wall clock): 20.3765s | Generation time (CUDA events): 20.3765s | Output length: 896 | KV cache: True
+output_len= 896 | no_kv=139.4783s | kv=21.3004s
+Generation time (wall clock): 168.0274s | Generation time (CUDA events): 168.0277s | Output length: 1024 | KV cache: False
+Generation time (wall clock): 166.9455s | Generation time (CUDA events): 166.9454s | Output length: 1024 | KV cache: False
+Generation time (wall clock): 166.7670s | Generation time (CUDA events): 166.7666s | Output length: 1024 | KV cache: False
+Generation time (wall clock): 20.1989s | Generation time (CUDA events): 20.1988s | Output length: 1024 | KV cache: True
+Generation time (wall clock): 25.2170s | Generation time (CUDA events): 25.2169s | Output length: 1024 | KV cache: True
+Generation time (wall clock): 22.9524s | Generation time (CUDA events): 22.9523s | Output length: 1024 | KV cache: True
+output_len=1024 | no_kv=167.2466s | kv=22.7893s
+Generation time (wall clock): 198.6116s | Generation time (CUDA events): 198.6111s | Output length: 1152 | KV cache: False
+Generation time (wall clock): 198.8454s | Generation time (CUDA events): 198.8448s | Output length: 1152 | KV cache: False
+Generation time (wall clock): 198.2780s | Generation time (CUDA events): 198.2773s | Output length: 1152 | KV cache: False
+Generation time (wall clock): 24.8856s | Generation time (CUDA events): 24.8855s | Output length: 1152 | KV cache: True
+Generation time (wall clock): 24.6427s | Generation time (CUDA events): 24.6426s | Output length: 1152 | KV cache: True
+Generation time (wall clock): 22.9814s | Generation time (CUDA events): 22.9813s | Output length: 1152 | KV cache: True
+output_len=1152 | no_kv=198.5777s | kv=24.1698s
+Generation time (wall clock): 234.6064s | Generation time (CUDA events): 234.6056s | Output length: 1280 | KV cache: False
+Traceback (most recent call last):
+  File "/homes/iws/yhruan22/cse554-wi26/assignment2/single_batch_experiment.py", line 134, in <module>
+    main()
+  File "/homes/iws/yhruan22/cse554-wi26/assignment2/single_batch_experiment.py", line 78, in main
+    time_generation(no_kv_engine, input_ids, output_len, use_kv_cache=False)
+  File "/homes/iws/yhruan22/cse554-wi26/assignment2/single_batch_experiment.py", line 43, in time_generation
+    engine.generate_from_ids(output_ids, output_len)
+  File "/homes/iws/yhruan22/cse554-wi26/assignment2/no_kv.py", line 160, in generate_from_ids
+    new_token = self.run(output_ids, prefill=True)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/homes/iws/yhruan22/cse554-wi26/assignment2/no_kv.py", line 56, in run
+    apply_rope(q, output=q, head_dim=self.head_dim, offset=0)
+  File "/homes/iws/yhruan22/cse554-wi26/assignment2/helper.py", line 104, in apply_rope
+    .float().to(device) / head_dim))
+             ^^^^^^^^^^
+KeyboardInterrupt
