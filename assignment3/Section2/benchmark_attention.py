@@ -83,18 +83,22 @@ def bench_prefill_once(
         cfg.iters,
     )
 
-    def _run_flashinfer_prefill():
-        # flashinfer prefill expects [qo_len, num_qo_heads, head_dim] and [kv_len, num_kv_heads, head_dim]
-        # Run per batch for compatibility across API revisions.
-        for b in range(batch):
-            flashinfer.prefill.single_prefill_with_kv_cache(
-                q[b].transpose(0, 1).contiguous(),
-                k[b].transpose(0, 1).contiguous(),
-                v[b].transpose(0, 1).contiguous(),
-                causal=True,
-            )
+    # Prepare flashinfer inputs outside timing: [batch*p, h, d] (NHD layout)
+    q_fi = q.permute(0, 2, 1, 3).reshape(batch * p, h_q, d).contiguous()
+    k_fi = k.permute(0, 2, 1, 3).reshape(batch * p, h_kv, d).contiguous()
+    v_fi = v.permute(0, 2, 1, 3).reshape(batch * p, h_kv, d).contiguous()
+    qo_indptr = torch.arange(0, (batch + 1) * p, p, dtype=torch.int32, device=cfg.device)
+    kv_indptr = qo_indptr
 
-    t_flashinfer_ms = _time_cuda(_run_flashinfer_prefill, cfg.warmup, cfg.iters)
+    workspace = torch.empty(128 << 20, dtype=torch.uint8, device=cfg.device)
+    prefill_wrapper = flashinfer.BatchPrefillWithRaggedKVCacheWrapper(workspace)
+    prefill_wrapper.plan(qo_indptr, kv_indptr, h_q, h_kv, d, causal=True)
+
+    t_flashinfer_ms = _time_cuda(
+        lambda: prefill_wrapper.run(q_fi, k_fi, v_fi),
+        cfg.warmup,
+        cfg.iters,
+    )
 
     flops = 4.0 * batch * h_q * p * p * d
     sdpa_tflops = flops / (t_sdpa_ms * 1e-3) / 1e12
@@ -123,19 +127,39 @@ def bench_decode_once(
         cfg.iters,
     )
 
-    def _run_flashinfer_decode():
-        for b in range(batch):
-            flashinfer.decode.single_decode_with_kv_cache(
-                q[b, :, 0, :].contiguous(),
-                k_cache[b].transpose(0, 1).contiguous(),
-                v_cache[b].transpose(0, 1).contiguous(),
-                kv_layout="NHD",
-                pos_encoding_mode="NONE",
-            )
+    # Prepare flashinfer paged KV cache outside timing
+    pages_per_seq = (c + page_size - 1) // page_size
+    last_pg = c - (pages_per_seq - 1) * page_size
+    # k_cache: [batch, h_kv, c, d] -> [batch*pages_per_seq, 2, page_size, h_kv, d]
+    k_paged = k_cache.permute(0, 2, 1, 3).reshape(batch, pages_per_seq, page_size, h_kv, d)
+    v_paged = v_cache.permute(0, 2, 1, 3).reshape(batch, pages_per_seq, page_size, h_kv, d)
+    kv_paged = torch.stack([k_paged, v_paged], dim=2).reshape(
+        batch * pages_per_seq, 2, page_size, h_kv, d
+    ).contiguous()
 
-    t_flashinfer_ms = _time_cuda(_run_flashinfer_decode, cfg.warmup, cfg.iters)
+    q_fi = q[:, :, 0, :].contiguous()  # [batch, h_q, d]
+    indptr = torch.arange(
+        0, (batch + 1) * pages_per_seq, pages_per_seq, dtype=torch.int32, device=cfg.device
+    )
+    indices = torch.arange(batch * pages_per_seq, dtype=torch.int32, device=cfg.device)
+    last_page_len = torch.full((batch,), last_pg, dtype=torch.int32, device=cfg.device)
 
-    bytes_moved = 2.0 * batch * c * h_kv * d * elem_size / max(page_size, 1)
+    workspace = torch.empty(128 << 20, dtype=torch.uint8, device=cfg.device)
+    decode_wrapper = flashinfer.BatchDecodeWithPagedKVCacheWrapper(workspace)
+    decode_wrapper.plan(
+        indptr, indices, last_page_len,
+        h_q, h_kv, d, page_size,
+        pos_encoding_mode="NONE",
+        data_type=cfg.dtype,
+    )
+
+    t_flashinfer_ms = _time_cuda(
+        lambda: decode_wrapper.run(q_fi, kv_paged),
+        cfg.warmup,
+        cfg.iters,
+    )
+
+    bytes_moved = 2.0 * batch * c * h_kv * d * elem_size
     sdpa_gbps = bytes_moved / (t_sdpa_ms * 1e-3) / 1e9
     flashinfer_gbps = bytes_moved / (t_flashinfer_ms * 1e-3) / 1e9
     return sdpa_gbps, flashinfer_gbps
