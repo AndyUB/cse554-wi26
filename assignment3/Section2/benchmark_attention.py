@@ -3,21 +3,29 @@ import csv
 import math
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, Tuple
 
 import torch
 import torch.nn.functional as F
-
-try:
-    import flashinfer
-except ImportError:
-    flashinfer = None
+import flashinfer
 
 
 MODELS: Dict[str, Dict[str, int]] = {
-    "llama3_1b": {"hidden_size": 2048, "num_attention_heads": 32, "num_key_value_heads": 8},
-    "llama3_3b": {"hidden_size": 3072, "num_attention_heads": 24, "num_key_value_heads": 8},
-    "llama3_8b": {"hidden_size": 4096, "num_attention_heads": 32, "num_key_value_heads": 8},
+    "llama3_1b": {
+        "hidden_size": 2048,
+        "num_attention_heads": 32,
+        "num_key_value_heads": 8,
+    },
+    "llama3_3b": {
+        "hidden_size": 3072,
+        "num_attention_heads": 24,
+        "num_key_value_heads": 8,
+    },
+    "llama3_8b": {
+        "hidden_size": 4096,
+        "num_attention_heads": 32,
+        "num_key_value_heads": 8,
+    },
 }
 
 
@@ -55,17 +63,9 @@ def _expand_kv_for_sdpa(x: torch.Tensor, num_q_heads: int) -> torch.Tensor:
     return x.repeat_interleave(repeat_factor, dim=1)
 
 
-def _flashinfer_call(module_name: str, fn_candidates: List[str], *args, **kwargs):
-    if flashinfer is None:
-        raise RuntimeError("flashinfer is not installed. Run: uv pip install flashinfer-python==0.5.3")
-    module = getattr(flashinfer, module_name)
-    for name in fn_candidates:
-        if hasattr(module, name):
-            return getattr(module, name)(*args, **kwargs)
-    raise RuntimeError(f"No supported FlashInfer function found in flashinfer.{module_name}: {fn_candidates}")
-
-
-def bench_prefill_once(model: Dict[str, int], batch: int, p: int, cfg: BenchCfg) -> Tuple[float, float]:
+def bench_prefill_once(
+    model: Dict[str, int], batch: int, p: int, cfg: BenchCfg
+) -> Tuple[float, float]:
     h_q = model["num_attention_heads"]
     h_kv = model["num_key_value_heads"]
     d = model["hidden_size"] // h_q
@@ -77,18 +77,20 @@ def bench_prefill_once(model: Dict[str, int], batch: int, p: int, cfg: BenchCfg)
     k_sdpa = _expand_kv_for_sdpa(k, h_q)
     v_sdpa = _expand_kv_for_sdpa(v, h_q)
 
-    t_sdpa_ms = _time_cuda(lambda: F.scaled_dot_product_attention(q, k_sdpa, v_sdpa, is_causal=True), cfg.warmup, cfg.iters)
+    t_sdpa_ms = _time_cuda(
+        lambda: F.scaled_dot_product_attention(q, k_sdpa, v_sdpa, is_causal=True),
+        cfg.warmup,
+        cfg.iters,
+    )
 
     def _run_flashinfer_prefill():
         # flashinfer prefill expects [qo_len, num_qo_heads, head_dim] and [kv_len, num_kv_heads, head_dim]
         # Run per batch for compatibility across API revisions.
         for b in range(batch):
-            _flashinfer_call(
-                "prefill",
-                ["single_prefill_with_kv_cache", "single_prefill_with_kv_cache_return_lse"],
-                q[b].transpose(0, 1),
-                k[b].transpose(0, 1),
-                v[b].transpose(0, 1),
+            flashinfer.prefill.single_prefill_with_kv_cache(
+                q[b].transpose(0, 1).contiguous(),
+                k[b].transpose(0, 1).contiguous(),
+                v[b].transpose(0, 1).contiguous(),
                 causal=True,
             )
 
@@ -100,7 +102,9 @@ def bench_prefill_once(model: Dict[str, int], batch: int, p: int, cfg: BenchCfg)
     return sdpa_tflops, flashinfer_tflops
 
 
-def bench_decode_once(model: Dict[str, int], batch: int, c: int, cfg: BenchCfg, page_size: int = 1) -> Tuple[float, float]:
+def bench_decode_once(
+    model: Dict[str, int], batch: int, c: int, cfg: BenchCfg, page_size: int = 1
+) -> Tuple[float, float]:
     h_q = model["num_attention_heads"]
     h_kv = model["num_key_value_heads"]
     d = model["hidden_size"] // h_q
@@ -113,16 +117,18 @@ def bench_decode_once(model: Dict[str, int], batch: int, c: int, cfg: BenchCfg, 
     k_sdpa = _expand_kv_for_sdpa(k_cache, h_q)
     v_sdpa = _expand_kv_for_sdpa(v_cache, h_q)
 
-    t_sdpa_ms = _time_cuda(lambda: F.scaled_dot_product_attention(q, k_sdpa, v_sdpa, is_causal=False), cfg.warmup, cfg.iters)
+    t_sdpa_ms = _time_cuda(
+        lambda: F.scaled_dot_product_attention(q, k_sdpa, v_sdpa, is_causal=False),
+        cfg.warmup,
+        cfg.iters,
+    )
 
     def _run_flashinfer_decode():
         for b in range(batch):
-            _flashinfer_call(
-                "decode",
-                ["single_decode_with_kv_cache", "single_decode_with_kv_cache_return_lse"],
-                q[b, :, 0, :],
-                k_cache[b].transpose(0, 1),
-                v_cache[b].transpose(0, 1),
+            flashinfer.decode.single_decode_with_kv_cache(
+                q[b, :, 0, :].contiguous(),
+                k_cache[b].transpose(0, 1).contiguous(),
+                v_cache[b].transpose(0, 1).contiguous(),
                 kv_layout="NHD",
                 pos_encoding_mode="NONE",
             )
@@ -135,7 +141,7 @@ def bench_decode_once(model: Dict[str, int], batch: int, c: int, cfg: BenchCfg, 
     return sdpa_gbps, flashinfer_gbps
 
 
-def _write_csv(path: Path, rows: List[Dict[str, float]]) -> None:
+def _write_csv(path: Path, rows: list[Dict[str, float]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
@@ -147,9 +153,9 @@ def run_all(cfg: BenchCfg, out_dir: Path) -> None:
     if not torch.cuda.is_available():
         raise RuntimeError("CUDA is required to run these benchmarks.")
 
-    p_values = [2 ** i for i in range(7, 16)]
-    b_values = [2 ** i for i in range(0, 7)]
-    c_values = [2 ** i for i in range(7, 16)]
+    p_values = [2**i for i in range(7, 16)]
+    b_values = [2**i for i in range(0, 7)]
+    c_values = [2**i for i in range(7, 16)]
     page_sizes = [1, 2, 4, 8, 16]
 
     prefill_p_rows = []
@@ -161,23 +167,59 @@ def run_all(cfg: BenchCfg, out_dir: Path) -> None:
     for model_name, model in MODELS.items():
         for p in p_values:
             sdpa, fi = bench_prefill_once(model, batch=1, p=p, cfg=cfg)
-            prefill_p_rows.append({"model": model_name, "p": p, "log2_p": int(math.log2(p)), "sdpa_tflops": sdpa, "flashinfer_tflops": fi})
+            prefill_p_rows.append(
+                {
+                    "model": model_name,
+                    "p": p,
+                    "log2_p": int(math.log2(p)),
+                    "sdpa_tflops": sdpa,
+                    "flashinfer_tflops": fi,
+                }
+            )
 
         for b in b_values:
             sdpa, fi = bench_prefill_once(model, batch=b, p=1024, cfg=cfg)
-            prefill_batch_rows.append({"model": model_name, "batch": b, "log2_batch": int(math.log2(b)), "sdpa_tflops": sdpa, "flashinfer_tflops": fi})
+            prefill_batch_rows.append(
+                {
+                    "model": model_name,
+                    "batch": b,
+                    "log2_batch": int(math.log2(b)),
+                    "sdpa_tflops": sdpa,
+                    "flashinfer_tflops": fi,
+                }
+            )
 
         for c in c_values:
             sdpa, fi = bench_decode_once(model, batch=1, c=c, cfg=cfg)
-            decode_c_rows.append({"model": model_name, "c": c, "log2_c": int(math.log2(c)), "sdpa_gbps": sdpa, "flashinfer_gbps": fi})
+            decode_c_rows.append(
+                {
+                    "model": model_name,
+                    "c": c,
+                    "log2_c": int(math.log2(c)),
+                    "sdpa_gbps": sdpa,
+                    "flashinfer_gbps": fi,
+                }
+            )
 
         for b in b_values:
             sdpa, fi = bench_decode_once(model, batch=b, c=1024, cfg=cfg)
-            decode_batch_rows.append({"model": model_name, "batch": b, "log2_batch": int(math.log2(b)), "sdpa_gbps": sdpa, "flashinfer_gbps": fi})
+            decode_batch_rows.append(
+                {
+                    "model": model_name,
+                    "batch": b,
+                    "log2_batch": int(math.log2(b)),
+                    "sdpa_gbps": sdpa,
+                    "flashinfer_gbps": fi,
+                }
+            )
 
         for page_size in page_sizes:
-            _, fi = bench_decode_once(model, batch=128, c=1024, cfg=cfg, page_size=page_size)
-            decode_page_rows.append({"model": model_name, "page_size": page_size, "flashinfer_gbps": fi})
+            _, fi = bench_decode_once(
+                model, batch=128, c=1024, cfg=cfg, page_size=page_size
+            )
+            decode_page_rows.append(
+                {"model": model_name, "page_size": page_size, "flashinfer_gbps": fi}
+            )
 
     _write_csv(out_dir / "prefill_vs_p.csv", prefill_p_rows)
     _write_csv(out_dir / "prefill_vs_batch.csv", prefill_batch_rows)
@@ -187,8 +229,12 @@ def run_all(cfg: BenchCfg, out_dir: Path) -> None:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Benchmark torch SDPA vs FlashInfer for Assignment3 Section2 Q2.")
-    parser.add_argument("--output-dir", type=Path, default=Path("assignment3/Section2/results"))
+    parser = argparse.ArgumentParser(
+        description="Benchmark torch SDPA vs FlashInfer for Assignment3 Section2 Q2."
+    )
+    parser.add_argument(
+        "--output-dir", type=Path, default=Path("assignment3/Section2/results")
+    )
     parser.add_argument("--warmup", type=int, default=10)
     parser.add_argument("--iters", type=int, default=50)
     args = parser.parse_args()
