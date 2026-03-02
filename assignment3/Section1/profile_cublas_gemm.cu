@@ -49,6 +49,8 @@ void AllocateGemmBuffers(const GemmShape &shape, half **d_a, half **d_b, half **
 
 /**
  * Profiles one GEMM shape using cublasGemmEx with warm-up and L2 flush.
+ *
+ * NOTE: Inputs/outputs and compute type are all FP16.
  */
 std::pair<float, double> ProfileShape(cublasHandle_t handle, const GemmShape &shape,
                                       int warmup_iterations, int profile_iterations,
@@ -72,7 +74,7 @@ std::pair<float, double> ProfileShape(cublasHandle_t handle, const GemmShape &sh
                  d_a, CUDA_R_16F, lda,
                  &beta,
                  d_c, CUDA_R_16F, ldc,
-                 CUBLAS_COMPUTE_32F,
+                 CUBLAS_COMPUTE_16F,
                  CUBLAS_GEMM_DEFAULT_TENSOR_OP);
   }
 
@@ -94,7 +96,7 @@ std::pair<float, double> ProfileShape(cublasHandle_t handle, const GemmShape &sh
                  d_a, CUDA_R_16F, lda,
                  &beta,
                  d_c, CUDA_R_16F, ldc,
-                 CUBLAS_COMPUTE_32F,
+                 CUBLAS_COMPUTE_16F,
                  CUBLAS_GEMM_DEFAULT_TENSOR_OP);
     cudaEventRecord(stop);
     cudaEventSynchronize(stop);
