@@ -9,3 +9,5 @@ trace.json
 *Answer*/
 **/build/*
 *.DS_Store
+*.pyc
+__pycache__/
