@@ -36,27 +36,44 @@ for split_k in 1 2 4 8; do
   for shape in "512 512" "4096 4096" "14336 4096" "4096 1024" "1024 4096"; do
     read -r n k <<< "${shape}"
     ./cutlass_profiler \
-      --operation=gemm \
-      --A=f16:row \
-      --B=f16:row \
-      --C=f16:row \
-      --accumulator-type=f32 \
+      --kernels=sgemm \
+      --A=f16:column \
+      --B=f16:column \
+      --C=f16:column \
+      --accum=f16 \
       --m=128:2048:128 \
       --n=${n} \
       --k=${k} \
       --split_k_mode=serial \
       --split_k_slices=${split_k} \
       --profiling-iterations=100 \
-      --providers=cutlass \
       --output=cutlass_n${n}_k${k}_splitk_${split_k}.csv
   done
 done
 ```
 
+### If CSV files only contain headers
+
+1. Make sure you run the command as a real multiline shell command (or from a `.sh` file).
+   If `\n` appears literally in your terminal command, it is treated as text, not a newline.
+2. Check whether kernels matched your filters:
+
+```bash
+head -n 5 cutlass_n512_k512_splitk_1.csv
+wc -l cutlass_n512_k512_splitk_1.csv
+```
+
+If `wc -l` is `1`, no kernel configuration matched. The command above uses
+`B=f16:col` and explicit `D=f16:row` because these are broadly supported GEMM
+layout constraints for FP16 tensor-op kernels.
+
 ## 4) Collect best CUTLASS performance per shape
 
 ```bash
 cd /workspace/cse554-wi26/assignment3/Section1
+./run_cutlass_q2.sh /workspace/cse554-wi26/cutlass/build/tools/profiler
+
+# then collect the best results
 python collect_cutlass_best.py \
   /workspace/cse554-wi26/cutlass/build/tools/profiler/cutlass_n*_k*_splitk_*.csv \
   --output cutlass_gemm_perf.csv
