@@ -241,7 +241,6 @@ class Engine:
                 seq_lens_after, dtype=torch.int32, device="cuda"
             )
 
-            # Global KV metadata (all requests, post-allocation)
             kv_indptr, kv_indices, kv_last_page_len = build_kv_metadata(
                 [self.kv_cache_map[r.request_id] for r in requests]
             )
@@ -417,7 +416,6 @@ class Engine:
             prompt_ids = self.tokenizer(prompt, return_tensors="pt").input_ids[0]
             requests.append(Request(idx, prompt_ids, rounds))
 
-        # Prefill
         prefill_outputs = self.run(requests, num_decode_req=0)
         print("prefill pass finished - appending first generated token ...")
         for i in range(len(requests)):
@@ -426,7 +424,6 @@ class Engine:
                 [requests[i].output_token_ids, new_tok], dim=0
             )
 
-        # Iterative decode
         for _ in range(rounds - 1):
             decode_outputs = self.run(requests, num_decode_req=len(requests))
             for i in range(len(requests)):

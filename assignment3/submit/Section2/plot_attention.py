@@ -12,7 +12,7 @@ MODEL_LABELS = {
 }
 
 
-def _subplot_compare(
+def subplot_compare(
     df: pd.DataFrame,
     x_col: str,
     y_a: str,
@@ -43,7 +43,7 @@ def _subplot_compare(
     plt.close(fig)
 
 
-def _subplot_flashinfer_only(
+def subplot_flashinfer_only(
     df: pd.DataFrame,
     x_col: str,
     y_col: str,
@@ -77,7 +77,7 @@ def main(results_dir: Path, out_dir: Path) -> None:
     decode_batch = pd.read_csv(results_dir / "decode_vs_batch.csv")
     decode_page = pd.read_csv(results_dir / "decode_vs_page_size.csv")
 
-    _subplot_compare(
+    subplot_compare(
         prefill_p,
         x_col="log2_p",
         y_a="sdpa_tflops",
@@ -88,7 +88,7 @@ def main(results_dir: Path, out_dir: Path) -> None:
         out_path=out_dir / "prefill_vs_p.png",
     )
 
-    _subplot_compare(
+    subplot_compare(
         prefill_batch,
         x_col="log2_batch",
         y_a="sdpa_tflops",
@@ -99,7 +99,7 @@ def main(results_dir: Path, out_dir: Path) -> None:
         out_path=out_dir / "prefill_vs_batch.png",
     )
 
-    _subplot_compare(
+    subplot_compare(
         decode_c,
         x_col="log2_c",
         y_a="sdpa_gbps",
@@ -110,7 +110,7 @@ def main(results_dir: Path, out_dir: Path) -> None:
         out_path=out_dir / "decode_vs_c.png",
     )
 
-    _subplot_compare(
+    subplot_compare(
         decode_batch,
         x_col="log2_batch",
         y_a="sdpa_gbps",
@@ -121,7 +121,7 @@ def main(results_dir: Path, out_dir: Path) -> None:
         out_path=out_dir / "decode_vs_batch.png",
     )
 
-    _subplot_flashinfer_only(
+    subplot_flashinfer_only(
         decode_page,
         x_col="page_size",
         y_col="flashinfer_gbps",

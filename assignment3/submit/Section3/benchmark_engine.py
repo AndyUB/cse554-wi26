@@ -143,16 +143,14 @@ def profile_prefill_ms(
 def experiment_q2_1(engine: Engine) -> None:
     batch = 32
     prompt_len = 256
-    decode_lens = [2**i for i in range(5, 11)]  # 32 .. 1024
+    decode_lens = [2**i for i in range(5, 11)]
 
     time_rows: List[Dict] = []
     op_rows: List[Dict] = []
 
     for dl in decode_lens:
-        print(f"  decode_len={dl} ...", end=" ", flush=True)
         t_pre = time_prefill_ms(engine, batch, prompt_len, warmup=2, iters=3)
         t_dec = time_decode_total_ms(engine, batch, prompt_len, dl)
-        print(f"prefill={t_pre:.1f}ms  decode_total={t_dec:.1f}ms")
         time_rows.append(
             {
                 "decode_len": dl,
@@ -165,7 +163,6 @@ def experiment_q2_1(engine: Engine) -> None:
         row: Dict = {"decode_len": dl, "log2_decode_len": int(math.log2(dl))}
         row.update(op_t)
         op_rows.append(row)
-        print(f"    last-step ops: {op_t}")
 
     write_csv(RESULTS_DIR / "q2_1_time_vs_decode_len.csv", time_rows)
     write_csv(RESULTS_DIR / "q2_1_last_decode_ops.csv", op_rows)
@@ -204,13 +201,11 @@ def experiment_q2_1(engine: Engine) -> None:
 
 def experiment_q2_2(engine: Engine) -> None:
     batch = 1
-    prefill_lens = [2**i for i in range(8, 15)]  # 256 .. 16384
+    prefill_lens = [2**i for i in range(8, 15)]
 
     rows: List[Dict] = []
     for pl in prefill_lens:
-        print(f"  prefill_len={pl} ...", end=" ", flush=True)
         op_t = profile_prefill_ms(engine, batch, pl, warmup=1)
-        print(op_t)
         row: Dict = {"prefill_len": pl, "log2_prefill_len": int(math.log2(pl))}
         row.update(op_t)
         rows.append(row)
@@ -250,21 +245,16 @@ def experiment_q2_2(engine: Engine) -> None:
 def experiment_q2_3(engine: Engine) -> None:
     prompt_len = 128
     decode_len = 128
-    batch_sizes = [2**i for i in range(0, 9)]  # 1 .. 256
+    batch_sizes = [2**i for i in range(0, 9)]
 
     rows: List[Dict] = []
     for batch in batch_sizes:
-        print(f"  batch={batch} ...", end=" ", flush=True)
-
         t_pre = time_prefill_ms(engine, batch, prompt_len, warmup=2, iters=3)
         t_dec = time_decode_total_ms(engine, batch, prompt_len, decode_len)
         total_ms = t_pre + t_dec
         total_toks = batch * (prompt_len + decode_len)
-        throughput = total_toks / (total_ms * 1e-3)  # tokens/s
+        throughput = total_toks / (total_ms * 1e-3)
 
-        print(
-            f"prefill={t_pre:.1f}ms  decode={t_dec:.1f}ms  throughput={throughput:.0f} tok/s"
-        )
         rows.append(
             {
                 "batch": batch,
