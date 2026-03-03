@@ -57,10 +57,20 @@ def _time_cuda(fn, warmup: int, iters: int) -> float:
     return start.elapsed_time(end) / iters
 
 
-def _expand_kv_for_sdpa(x: torch.Tensor, num_q_heads: int) -> torch.Tensor:
-    # x: [B, H_kv, S, D] -> [B, H_q, S, D]
-    repeat_factor = num_q_heads // x.shape[1]
-    return x.repeat_interleave(repeat_factor, dim=1)
+def _safe_time_cuda(fn, warmup: int, iters: int) -> float:
+    """Like _time_cuda but returns nan on CUDA out-of-memory instead of crashing.
+
+    The GPU (sm75) has no flash-attention kernel that supports GQA, so SDPA
+    falls back to the math backend which materialises the full O(N²) float32
+    attention matrix.  For large sequence lengths this exhausts VRAM; we record
+    nan for those points and continue the benchmark.
+    """
+    try:
+        return _time_cuda(fn, warmup, iters)
+    except torch.cuda.OutOfMemoryError:
+        torch.cuda.synchronize()
+        torch.cuda.empty_cache()
+        return float("nan")
 
 
 def bench_prefill_once(
@@ -74,11 +84,8 @@ def bench_prefill_once(
     k = torch.randn(batch, h_kv, p, d, device=cfg.device, dtype=cfg.dtype)
     v = torch.randn(batch, h_kv, p, d, device=cfg.device, dtype=cfg.dtype)
 
-    k_sdpa = _expand_kv_for_sdpa(k, h_q)
-    v_sdpa = _expand_kv_for_sdpa(v, h_q)
-
-    t_sdpa_ms = _time_cuda(
-        lambda: F.scaled_dot_product_attention(q, k_sdpa, v_sdpa, is_causal=True),
+    t_sdpa_ms = _safe_time_cuda(
+        lambda: F.scaled_dot_product_attention(q, k, v, is_causal=True, enable_gqa=True),
         cfg.warmup,
         cfg.iters,
     )
@@ -118,11 +125,8 @@ def bench_decode_once(
     k_cache = torch.randn(batch, h_kv, c, d, device=cfg.device, dtype=cfg.dtype)
     v_cache = torch.randn(batch, h_kv, c, d, device=cfg.device, dtype=cfg.dtype)
 
-    k_sdpa = _expand_kv_for_sdpa(k_cache, h_q)
-    v_sdpa = _expand_kv_for_sdpa(v_cache, h_q)
-
-    t_sdpa_ms = _time_cuda(
-        lambda: F.scaled_dot_product_attention(q, k_sdpa, v_sdpa, is_causal=False),
+    t_sdpa_ms = _safe_time_cuda(
+        lambda: F.scaled_dot_product_attention(q, k_cache, v_cache, is_causal=False, enable_gqa=True),
         cfg.warmup,
         cfg.iters,
     )
@@ -191,6 +195,7 @@ def run_all(cfg: BenchCfg, out_dir: Path) -> None:
     for model_name, model in MODELS.items():
         for p in p_values:
             sdpa, fi = bench_prefill_once(model, batch=1, p=p, cfg=cfg)
+            torch.cuda.empty_cache()
             prefill_p_rows.append(
                 {
                     "model": model_name,
@@ -203,6 +208,7 @@ def run_all(cfg: BenchCfg, out_dir: Path) -> None:
 
         for b in b_values:
             sdpa, fi = bench_prefill_once(model, batch=b, p=1024, cfg=cfg)
+            torch.cuda.empty_cache()
             prefill_batch_rows.append(
                 {
                     "model": model_name,
@@ -215,6 +221,7 @@ def run_all(cfg: BenchCfg, out_dir: Path) -> None:
 
         for c in c_values:
             sdpa, fi = bench_decode_once(model, batch=1, c=c, cfg=cfg)
+            torch.cuda.empty_cache()
             decode_c_rows.append(
                 {
                     "model": model_name,
@@ -227,6 +234,7 @@ def run_all(cfg: BenchCfg, out_dir: Path) -> None:
 
         for b in b_values:
             sdpa, fi = bench_decode_once(model, batch=b, c=1024, cfg=cfg)
+            torch.cuda.empty_cache()
             decode_batch_rows.append(
                 {
                     "model": model_name,
@@ -241,6 +249,7 @@ def run_all(cfg: BenchCfg, out_dir: Path) -> None:
             _, fi = bench_decode_once(
                 model, batch=128, c=1024, cfg=cfg, page_size=page_size
             )
+            torch.cuda.empty_cache()
             decode_page_rows.append(
                 {"model": model_name, "page_size": page_size, "flashinfer_gbps": fi}
             )
