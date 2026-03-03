@@ -141,7 +141,6 @@ def profile_prefill_ms(
 
 
 def experiment_q2_1(engine: Engine) -> None:
-    print("\n=== Q2.1: decode-length sweep (batch=32, prefill=256) ===")
     batch = 32
     prompt_len = 256
     decode_lens = [2**i for i in range(5, 11)]  # 32 .. 1024
@@ -202,11 +201,8 @@ def experiment_q2_1(engine: Engine) -> None:
     fig.savefig(RESULTS_DIR / "q2_1_last_decode_ops.png", dpi=150)
     plt.close(fig)
 
-    print("  Saved Q2.1 plots and CSVs.")
-
 
 def experiment_q2_2(engine: Engine) -> None:
-    print("\n=== Q2.2: prefill-length sweep (batch=1) ===")
     batch = 1
     prefill_lens = [2**i for i in range(8, 15)]  # 256 .. 16384
 
@@ -250,11 +246,8 @@ def experiment_q2_2(engine: Engine) -> None:
     fig.savefig(RESULTS_DIR / "q2_2_prefill_total.png", dpi=150)
     plt.close(fig)
 
-    print("  Saved Q2.2 plots and CSVs.")
-
 
 def experiment_q2_3(engine: Engine) -> None:
-    print("\n=== Q2.3: batch-size sweep (prefill=128, decode=128) ===")
     prompt_len = 128
     decode_len = 128
     batch_sizes = [2**i for i in range(0, 9)]  # 1 .. 256
@@ -310,16 +303,9 @@ def experiment_q2_3(engine: Engine) -> None:
     fig.savefig(RESULTS_DIR / "q2_3_throughput_vs_batch.png", dpi=150)
     plt.close(fig)
 
-    print("  Saved Q2.3 plots and CSVs.")
-
 
 if __name__ == "__main__":
-    print("Loading engine ...")
     engine = Engine()
-    print("Engine ready.\n")
-
     experiment_q2_1(engine)
     experiment_q2_2(engine)
     experiment_q2_3(engine)
-
-    print(f"\nAll results written to: {RESULTS_DIR}")
