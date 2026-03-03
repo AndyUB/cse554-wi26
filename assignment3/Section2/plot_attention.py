@@ -12,12 +12,25 @@ MODEL_LABELS = {
 }
 
 
-def _subplot_compare(df: pd.DataFrame, x_col: str, y_a: str, y_b: str, x_label: str, y_label: str, title: str, out_path: Path) -> None:
+def _subplot_compare(
+    df: pd.DataFrame,
+    x_col: str,
+    y_a: str,
+    y_b: str,
+    x_label: str,
+    y_label: str,
+    title: str,
+    out_path: Path,
+) -> None:
     fig, axs = plt.subplots(1, 3, figsize=(18, 5), sharey=True)
     for i, model in enumerate(MODELS):
         part = df[df["model"] == model].sort_values(x_col)
-        axs[i].plot(part[x_col], part[y_a], marker="o", linestyle="-", label="PyTorch SDPA")
-        axs[i].plot(part[x_col], part[y_b], marker="x", linestyle="--", label="FlashInfer")
+        axs[i].plot(
+            part[x_col], part[y_a], marker="o", linestyle="-", label="PyTorch SDPA"
+        )
+        axs[i].plot(
+            part[x_col], part[y_b], marker="x", linestyle="--", label="FlashInfer"
+        )
         axs[i].set_title(MODEL_LABELS[model])
         axs[i].set_xlabel(x_label)
         axs[i].grid(True, alpha=0.3)
@@ -30,11 +43,21 @@ def _subplot_compare(df: pd.DataFrame, x_col: str, y_a: str, y_b: str, x_label: 
     plt.close(fig)
 
 
-def _subplot_flashinfer_only(df: pd.DataFrame, x_col: str, y_col: str, x_label: str, y_label: str, title: str, out_path: Path) -> None:
+def _subplot_flashinfer_only(
+    df: pd.DataFrame,
+    x_col: str,
+    y_col: str,
+    x_label: str,
+    y_label: str,
+    title: str,
+    out_path: Path,
+) -> None:
     fig, axs = plt.subplots(1, 3, figsize=(18, 5), sharey=True)
     for i, model in enumerate(MODELS):
         part = df[df["model"] == model].sort_values(x_col)
-        axs[i].plot(part[x_col], part[y_col], marker="o", linestyle="-", label="FlashInfer")
+        axs[i].plot(
+            part[x_col], part[y_col], marker="o", linestyle="-", label="FlashInfer"
+        )
         axs[i].set_title(MODEL_LABELS[model])
         axs[i].set_xlabel(x_label)
         axs[i].grid(True, alpha=0.3)
@@ -110,9 +133,15 @@ def main(results_dir: Path, out_dir: Path) -> None:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Generate Section2 attention benchmark figures from CSV outputs.")
-    parser.add_argument("--results-dir", type=Path, default=Path("assignment3/Section2/results"))
-    parser.add_argument("--output-dir", type=Path, default=Path("assignment3/Section2/figures"))
+    parser = argparse.ArgumentParser(
+        description="Generate Section2 attention benchmark figures from CSV outputs."
+    )
+    parser.add_argument(
+        "--results-dir", type=Path, default=Path("assignment3/Section2/results")
+    )
+    parser.add_argument(
+        "--output-dir", type=Path, default=Path("assignment3/Section2/figures")
+    )
     args = parser.parse_args()
     main(args.results_dir, args.output_dir)
     print(f"Saved figures to {args.output_dir}")

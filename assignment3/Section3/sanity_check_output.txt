@@ -1,0 +1,43 @@
+Loading safetensors:   0%|          | 0/12 [00:00<?, ?it/s]Loading safetensors: 100%|██████████| 12/12 [00:00<00:00, 2609.07it/s]
+>>> starting batched generation (30 rounds)
+prefill pass finished - appending first generated token ...
+[request 00] Hi, who are you? I am a 22 year old female from the UK. I am a student and I am currently studying for my degree in Psychology. I am a
+
+[request 01] Hi, who are you? I am a 22 year old female from the UK. I am a student and I am currently studying for my degree in Psychology. I am a
+
+[request 02] Hi, who are you? I am a 22 year old female from the UK. I am a student and I am currently studying for my degree in Psychology. I am a
+
+[request 03] Hi, who are you? I am a 22 year old female from the UK. I am a student and I am currently studying for my degree in Psychology. I am a
+
+[request 04] Hi, who are you? I am a 22 year old female from the UK. I am a student and I am currently studying for my degree in Psychology. I am a
+
+[request 05] Hi, who are you? I am a 22 year old female from the UK. I am a student and I am currently studying for my degree in Psychology. I am a
+
+[request 06] Hi, who are you? I am a 22 year old female from the UK. I am a student and I am currently studying for my degree in Psychology. I am a
+
+[request 07] Hi, who are you? I am a 22 year old female from the UK. I am a student and I am currently studying for my degree in Psychology. I am a
+
+[request 08] Hi, who are you? I am a 22 year old female from the UK. I am a student and I am currently studying for my degree in Psychology. I am a
+
+[request 09] Hi, who are you? I am a 22 year old female from the UK. I am a student and I am currently studying for my degree in Psychology. I am a
+
+[request 10] The University of Washington is located in Seattle, Washington, and is one of the top public universities in the United States. The university is known for its strong research programs and its commitment to
+
+[request 11] The University of Washington is located in Seattle, Washington, and is one of the top public universities in the United States. The university is known for its strong research programs and its commitment to
+
+[request 12] The University of Washington is located in Seattle, Washington, and is one of the top public universities in the United States. The university is known for its strong research programs and its commitment to
+
+[request 13] The University of Washington is located in Seattle, Washington, and is one of the top public universities in the United States. The university is known for its strong research programs and its commitment to
+
+[request 14] The University of Washington is located in Seattle, Washington, and is one of the top public universities in the United States. The university is known for its strong research programs and its commitment to
+
+[request 15] The University of Washington is located in Seattle, Washington, and is one of the top public universities in the United States. The university is known for its strong research programs and its commitment to
+
+[request 16] The University of Washington is located in Seattle, Washington, and is one of the top public universities in the United States. The university is known for its strong research programs and its commitment to
+
+[request 17] The University of Washington is located in Seattle, Washington, and is one of the top public universities in the United States. The university is known for its strong research programs and its commitment to
+
+[request 18] The University of Washington is located in Seattle, Washington, and is one of the top public universities in the United States. The university is known for its strong research programs and its commitment to
+
+[request 19] The University of Washington is located in Seattle, Washington, and is one of the top public universities in the United States. The university is known for its strong research programs and its commitment to
+

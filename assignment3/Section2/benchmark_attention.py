@@ -58,13 +58,6 @@ def _time_cuda(fn, warmup: int, iters: int) -> float:
 
 
 def _safe_time_cuda(fn, warmup: int, iters: int) -> float:
-    """Like _time_cuda but returns nan on CUDA out-of-memory instead of crashing.
-
-    The GPU (sm75) has no flash-attention kernel that supports GQA, so SDPA
-    falls back to the math backend which materialises the full O(N²) float32
-    attention matrix.  For large sequence lengths this exhausts VRAM; we record
-    nan for those points and continue the benchmark.
-    """
     try:
         return _time_cuda(fn, warmup, iters)
     except torch.cuda.OutOfMemoryError:
@@ -85,16 +78,19 @@ def bench_prefill_once(
     v = torch.randn(batch, h_kv, p, d, device=cfg.device, dtype=cfg.dtype)
 
     t_sdpa_ms = _safe_time_cuda(
-        lambda: F.scaled_dot_product_attention(q, k, v, is_causal=True, enable_gqa=True),
+        lambda: F.scaled_dot_product_attention(
+            q, k, v, is_causal=True, enable_gqa=True
+        ),
         cfg.warmup,
         cfg.iters,
     )
 
-    # Prepare flashinfer inputs outside timing: [batch*p, h, d] (NHD layout)
     q_fi = q.permute(0, 2, 1, 3).reshape(batch * p, h_q, d).contiguous()
     k_fi = k.permute(0, 2, 1, 3).reshape(batch * p, h_kv, d).contiguous()
     v_fi = v.permute(0, 2, 1, 3).reshape(batch * p, h_kv, d).contiguous()
-    qo_indptr = torch.arange(0, (batch + 1) * p, p, dtype=torch.int32, device=cfg.device)
+    qo_indptr = torch.arange(
+        0, (batch + 1) * p, p, dtype=torch.int32, device=cfg.device
+    )
     kv_indptr = qo_indptr
 
     workspace = torch.empty(128 << 20, dtype=torch.uint8, device=cfg.device)
@@ -126,24 +122,34 @@ def bench_decode_once(
     v_cache = torch.randn(batch, h_kv, c, d, device=cfg.device, dtype=cfg.dtype)
 
     t_sdpa_ms = _safe_time_cuda(
-        lambda: F.scaled_dot_product_attention(q, k_cache, v_cache, is_causal=False, enable_gqa=True),
+        lambda: F.scaled_dot_product_attention(
+            q, k_cache, v_cache, is_causal=False, enable_gqa=True
+        ),
         cfg.warmup,
         cfg.iters,
     )
 
-    # Prepare flashinfer paged KV cache outside timing
     pages_per_seq = (c + page_size - 1) // page_size
     last_pg = c - (pages_per_seq - 1) * page_size
-    # k_cache: [batch, h_kv, c, d] -> [batch*pages_per_seq, 2, page_size, h_kv, d]
-    k_paged = k_cache.permute(0, 2, 1, 3).reshape(batch, pages_per_seq, page_size, h_kv, d)
-    v_paged = v_cache.permute(0, 2, 1, 3).reshape(batch, pages_per_seq, page_size, h_kv, d)
-    kv_paged = torch.stack([k_paged, v_paged], dim=2).reshape(
-        batch * pages_per_seq, 2, page_size, h_kv, d
-    ).contiguous()
+    k_paged = k_cache.permute(0, 2, 1, 3).reshape(
+        batch, pages_per_seq, page_size, h_kv, d
+    )
+    v_paged = v_cache.permute(0, 2, 1, 3).reshape(
+        batch, pages_per_seq, page_size, h_kv, d
+    )
+    kv_paged = (
+        torch.stack([k_paged, v_paged], dim=2)
+        .reshape(batch * pages_per_seq, 2, page_size, h_kv, d)
+        .contiguous()
+    )
 
-    q_fi = q[:, :, 0, :].contiguous()  # [batch, h_q, d]
+    q_fi = q[:, :, 0, :].contiguous()
     indptr = torch.arange(
-        0, (batch + 1) * pages_per_seq, pages_per_seq, dtype=torch.int32, device=cfg.device
+        0,
+        (batch + 1) * pages_per_seq,
+        pages_per_seq,
+        dtype=torch.int32,
+        device=cfg.device,
     )
     indices = torch.arange(batch * pages_per_seq, dtype=torch.int32, device=cfg.device)
     last_page_len = torch.full((batch,), last_pg, dtype=torch.int32, device=cfg.device)
@@ -151,8 +157,13 @@ def bench_decode_once(
     workspace = torch.empty(128 << 20, dtype=torch.uint8, device=cfg.device)
     decode_wrapper = flashinfer.BatchDecodeWithPagedKVCacheWrapper(workspace)
     decode_wrapper.plan(
-        indptr, indices, last_page_len,
-        h_q, h_kv, d, page_size,
+        indptr,
+        indices,
+        last_page_len,
+        h_q,
+        h_kv,
+        d,
+        page_size,
         pos_encoding_mode="NONE",
         data_type=cfg.dtype,
     )

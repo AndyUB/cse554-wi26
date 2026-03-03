@@ -1,19 +1,3 @@
-"""
-Section 3 Q2 benchmark: prefill/decode profiling for the FlashInfer engine.
-
-Three experiments
------------------
-Q2.1  batch=32, prefill=256, decode lengths 2^5..2^10
-      - Total prefill time vs decode time (end-to-end curve)
-      - Per-operation breakdown of the last decode step
-
-Q2.2  batch=1, prefill lengths 2^8..2^14
-      - Per-operation breakdown across prefill lengths
-
-Q2.3  batch sizes 2^0..2^8, prefill=128, decode=128
-      - End-to-end time vs batch size
-      - Throughput vs batch size
-"""
 from __future__ import annotations
 
 import csv
@@ -23,6 +7,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import torch
@@ -30,13 +15,9 @@ import torch
 from flashinfer_pipeline import Engine, Request
 
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
 RESULTS_DIR = Path(__file__).resolve().parent / "results"
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-
-VOCAB_SIZE = 32_000  # synthetic token ids
+VOCAB_SIZE = 32_000
 
 
 def _make_requests(batch: int, prompt_len: int, output_len: int) -> List[Request]:
@@ -64,9 +45,6 @@ def _write_csv(path: Path, rows: List[Dict]) -> None:
         writer.writerows(rows)
 
 
-# ---------------------------------------------------------------------------
-# Core timing primitives
-# ---------------------------------------------------------------------------
 def time_prefill_ms(
     engine: Engine,
     batch: int,
@@ -96,13 +74,12 @@ def time_decode_total_ms(
     prompt_len: int,
     decode_len: int,
 ) -> float:
-    """Total time (ms) for *decode_len* decode steps (after one prefill)."""
+    """Total time (ms) for decode_len decode steps (after one prefill)."""
     reqs = _make_requests(batch, prompt_len, decode_len)
 
-    # Prefill (not timed)
     outputs = engine.run(reqs, num_decode_req=0)
     for i, req in enumerate(reqs):
-        req.output_token_ids = torch.cat([req.output_token_ids, outputs[i:i+1]])
+        req.output_token_ids = torch.cat([req.output_token_ids, outputs[i : i + 1]])
 
     _cuda_sync()
     s, e = _time_event_ms()
@@ -110,7 +87,7 @@ def time_decode_total_ms(
     for _ in range(decode_len):
         dec_out = engine.run(reqs, num_decode_req=len(reqs))
         for i, req in enumerate(reqs):
-            req.output_token_ids = torch.cat([req.output_token_ids, dec_out[i:i+1]])
+            req.output_token_ids = torch.cat([req.output_token_ids, dec_out[i : i + 1]])
     e.record()
     _cuda_sync()
 
@@ -124,21 +101,18 @@ def profile_last_decode_ms(
     prompt_len: int,
     decode_len: int,
 ) -> Dict[str, float]:
-    """Run decode_len steps then profile the LAST decode step per operation."""
+    """Run decode_len steps then profile the last decode step per operation."""
     reqs = _make_requests(batch, prompt_len, decode_len)
 
-    # Prefill
     outputs = engine.run(reqs, num_decode_req=0)
     for i, req in enumerate(reqs):
-        req.output_token_ids = torch.cat([req.output_token_ids, outputs[i:i+1]])
+        req.output_token_ids = torch.cat([req.output_token_ids, outputs[i : i + 1]])
 
-    # decode_len - 1 unprofile steps
     for _ in range(decode_len - 1):
         dec_out = engine.run(reqs, num_decode_req=len(reqs))
         for i, req in enumerate(reqs):
-            req.output_token_ids = torch.cat([req.output_token_ids, dec_out[i:i+1]])
+            req.output_token_ids = torch.cat([req.output_token_ids, dec_out[i : i + 1]])
 
-    # Last step with profiling
     _cuda_sync()
     _, op_times = engine.run(reqs, num_decode_req=len(reqs), profile_ops=True)
 
@@ -152,7 +126,7 @@ def profile_prefill_ms(
     prompt_len: int,
     warmup: int = 1,
 ) -> Dict[str, float]:
-    """Profile per-op times for a single prefill pass (averaged over warmup+1)."""
+    """Profile per-op times for a single prefill pass."""
     all_times: Optional[Dict[str, float]] = None
 
     for i in range(warmup + 1):
@@ -163,12 +137,9 @@ def profile_prefill_ms(
         if i == warmup:
             all_times = op_times
 
-    return all_times  # type: ignore[return-value]
+    return all_times
 
 
-# ---------------------------------------------------------------------------
-# Q2.1: batch=32, prefill=256, vary decode length
-# ---------------------------------------------------------------------------
 def experiment_q2_1(engine: Engine) -> None:
     print("\n=== Q2.1: decode-length sweep (batch=32, prefill=256) ===")
     batch = 32
@@ -180,23 +151,17 @@ def experiment_q2_1(engine: Engine) -> None:
 
     for dl in decode_lens:
         print(f"  decode_len={dl} ...", end=" ", flush=True)
-
-        # Total prefill time (independent of decode_len, but measured each time
-        # for a fair comparison at each context width)
         t_pre = time_prefill_ms(engine, batch, prompt_len, warmup=2, iters=3)
-
-        # Total time for all decode steps
         t_dec = time_decode_total_ms(engine, batch, prompt_len, dl)
-
         print(f"prefill={t_pre:.1f}ms  decode_total={t_dec:.1f}ms")
-        time_rows.append({
-            "decode_len": dl,
-            "log2_decode_len": int(math.log2(dl)),
-            "prefill_ms": t_pre,
-            "decode_total_ms": t_dec,
-        })
-
-        # Per-op breakdown of LAST decode step
+        time_rows.append(
+            {
+                "decode_len": dl,
+                "log2_decode_len": int(math.log2(dl)),
+                "prefill_ms": t_pre,
+                "decode_total_ms": t_dec,
+            }
+        )
         op_t = profile_last_decode_ms(engine, batch, prompt_len, dl)
         row: Dict = {"decode_len": dl, "log2_decode_len": int(math.log2(dl))}
         row.update(op_t)
@@ -206,7 +171,6 @@ def experiment_q2_1(engine: Engine) -> None:
     _write_csv(RESULTS_DIR / "q2_1_time_vs_decode_len.csv", time_rows)
     _write_csv(RESULTS_DIR / "q2_1_last_decode_ops.csv", op_rows)
 
-    # --- Plot end-to-end time curve ---
     x = [r["log2_decode_len"] for r in time_rows]
     fig, ax = plt.subplots()
     ax.plot(x, [r["prefill_ms"] for r in time_rows], "o-", label="Prefill")
@@ -220,8 +184,9 @@ def experiment_q2_1(engine: Engine) -> None:
     fig.savefig(RESULTS_DIR / "q2_1_time_vs_decode_len.png", dpi=150)
     plt.close(fig)
 
-    # --- Plot per-op breakdown of last decode step ---
-    op_keys = [k for k in op_rows[0].keys() if k not in ("decode_len", "log2_decode_len")]
+    op_keys = [
+        k for k in op_rows[0].keys() if k not in ("decode_len", "log2_decode_len")
+    ]
     x_labels = [str(r["decode_len"]) for r in op_rows]
     fig, ax = plt.subplots()
     bottoms = [0.0] * len(op_rows)
@@ -240,9 +205,6 @@ def experiment_q2_1(engine: Engine) -> None:
     print("  Saved Q2.1 plots and CSVs.")
 
 
-# ---------------------------------------------------------------------------
-# Q2.2: batch=1, vary prefill length
-# ---------------------------------------------------------------------------
 def experiment_q2_2(engine: Engine) -> None:
     print("\n=== Q2.2: prefill-length sweep (batch=1) ===")
     batch = 1
@@ -259,9 +221,10 @@ def experiment_q2_2(engine: Engine) -> None:
 
     _write_csv(RESULTS_DIR / "q2_2_prefill_breakdown.csv", rows)
 
-    # --- Plot: total prefill time vs log2(prefill_len) ---
     x = [r["log2_prefill_len"] for r in rows]
-    op_keys = [k for k in rows[0].keys() if k not in ("prefill_len", "log2_prefill_len")]
+    op_keys = [
+        k for k in rows[0].keys() if k not in ("prefill_len", "log2_prefill_len")
+    ]
     fig, ax = plt.subplots()
     bottoms = [0.0] * len(rows)
     for op in op_keys:
@@ -276,7 +239,6 @@ def experiment_q2_2(engine: Engine) -> None:
     fig.savefig(RESULTS_DIR / "q2_2_prefill_breakdown.png", dpi=150)
     plt.close(fig)
 
-    # Also a line plot of total time
     totals = [sum(r.get(op, 0.0) for op in op_keys) for r in rows]
     fig, ax = plt.subplots()
     ax.plot(x, totals, "o-")
@@ -291,9 +253,6 @@ def experiment_q2_2(engine: Engine) -> None:
     print("  Saved Q2.2 plots and CSVs.")
 
 
-# ---------------------------------------------------------------------------
-# Q2.3: vary batch size, prefill=128, decode=128
-# ---------------------------------------------------------------------------
 def experiment_q2_3(engine: Engine) -> None:
     print("\n=== Q2.3: batch-size sweep (prefill=128, decode=128) ===")
     prompt_len = 128
@@ -307,25 +266,27 @@ def experiment_q2_3(engine: Engine) -> None:
         t_pre = time_prefill_ms(engine, batch, prompt_len, warmup=2, iters=3)
         t_dec = time_decode_total_ms(engine, batch, prompt_len, decode_len)
         total_ms = t_pre + t_dec
-        # Throughput: (prefill_tokens + decode_tokens) per second
         total_toks = batch * (prompt_len + decode_len)
         throughput = total_toks / (total_ms * 1e-3)  # tokens/s
 
-        print(f"prefill={t_pre:.1f}ms  decode={t_dec:.1f}ms  throughput={throughput:.0f} tok/s")
-        rows.append({
-            "batch": batch,
-            "log2_batch": int(math.log2(batch)),
-            "prefill_ms": t_pre,
-            "decode_total_ms": t_dec,
-            "total_ms": total_ms,
-            "throughput_toks_per_s": throughput,
-        })
+        print(
+            f"prefill={t_pre:.1f}ms  decode={t_dec:.1f}ms  throughput={throughput:.0f} tok/s"
+        )
+        rows.append(
+            {
+                "batch": batch,
+                "log2_batch": int(math.log2(batch)),
+                "prefill_ms": t_pre,
+                "decode_total_ms": t_dec,
+                "total_ms": total_ms,
+                "throughput_toks_per_s": throughput,
+            }
+        )
 
     _write_csv(RESULTS_DIR / "q2_3_batch_sweep.csv", rows)
 
     x = [r["log2_batch"] for r in rows]
 
-    # End-to-end time curve
     fig, ax = plt.subplots()
     ax.plot(x, [r["prefill_ms"] for r in rows], "o-", label="Prefill")
     ax.plot(x, [r["decode_total_ms"] for r in rows], "s-", label="Decode total")
@@ -339,7 +300,6 @@ def experiment_q2_3(engine: Engine) -> None:
     fig.savefig(RESULTS_DIR / "q2_3_time_vs_batch.png", dpi=150)
     plt.close(fig)
 
-    # Throughput curve
     fig, ax = plt.subplots()
     ax.plot(x, [r["throughput_toks_per_s"] for r in rows], "o-")
     ax.set_xlabel("log₂(batch size)")
@@ -353,9 +313,6 @@ def experiment_q2_3(engine: Engine) -> None:
     print("  Saved Q2.3 plots and CSVs.")
 
 
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
 if __name__ == "__main__":
     print("Loading engine ...")
     engine = Engine()
