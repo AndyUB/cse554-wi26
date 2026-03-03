@@ -20,24 +20,24 @@ RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 VOCAB_SIZE = 32_000
 
 
-def _make_requests(batch: int, prompt_len: int, output_len: int) -> List[Request]:
+def make_requests(batch: int, prompt_len: int, output_len: int) -> List[Request]:
     return [
         Request(i, torch.randint(100, VOCAB_SIZE, (prompt_len,)), output_len)
         for i in range(batch)
     ]
 
 
-def _cuda_sync() -> None:
+def cuda_sync() -> None:
     torch.cuda.synchronize()
 
 
-def _time_event_ms() -> Tuple[torch.cuda.Event, torch.cuda.Event]:
+def time_event_ms() -> Tuple[torch.cuda.Event, torch.cuda.Event]:
     s = torch.cuda.Event(enable_timing=True)
     e = torch.cuda.Event(enable_timing=True)
     return s, e
 
 
-def _write_csv(path: Path, rows: List[Dict]) -> None:
+def write_csv(path: Path, rows: List[Dict]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
@@ -55,13 +55,13 @@ def time_prefill_ms(
     """Average wall-time (ms) for a single prefill pass."""
     times: List[float] = []
     for i in range(warmup + iters):
-        reqs = _make_requests(batch, prompt_len, 1)
-        _cuda_sync()
-        s, e = _time_event_ms()
+        reqs = make_requests(batch, prompt_len, 1)
+        cuda_sync()
+        s, e = time_event_ms()
         s.record()
         engine.run(reqs, num_decode_req=0)
         e.record()
-        _cuda_sync()
+        cuda_sync()
         engine.reset()
         if i >= warmup:
             times.append(s.elapsed_time(e))
@@ -75,21 +75,21 @@ def time_decode_total_ms(
     decode_len: int,
 ) -> float:
     """Total time (ms) for decode_len decode steps (after one prefill)."""
-    reqs = _make_requests(batch, prompt_len, decode_len)
+    reqs = make_requests(batch, prompt_len, decode_len)
 
     outputs = engine.run(reqs, num_decode_req=0)
     for i, req in enumerate(reqs):
         req.output_token_ids = torch.cat([req.output_token_ids, outputs[i : i + 1]])
 
-    _cuda_sync()
-    s, e = _time_event_ms()
+    cuda_sync()
+    s, e = time_event_ms()
     s.record()
     for _ in range(decode_len):
         dec_out = engine.run(reqs, num_decode_req=len(reqs))
         for i, req in enumerate(reqs):
             req.output_token_ids = torch.cat([req.output_token_ids, dec_out[i : i + 1]])
     e.record()
-    _cuda_sync()
+    cuda_sync()
 
     engine.reset()
     return s.elapsed_time(e)
@@ -102,7 +102,7 @@ def profile_last_decode_ms(
     decode_len: int,
 ) -> Dict[str, float]:
     """Run decode_len steps then profile the last decode step per operation."""
-    reqs = _make_requests(batch, prompt_len, decode_len)
+    reqs = make_requests(batch, prompt_len, decode_len)
 
     outputs = engine.run(reqs, num_decode_req=0)
     for i, req in enumerate(reqs):
@@ -113,7 +113,7 @@ def profile_last_decode_ms(
         for i, req in enumerate(reqs):
             req.output_token_ids = torch.cat([req.output_token_ids, dec_out[i : i + 1]])
 
-    _cuda_sync()
+    cuda_sync()
     _, op_times = engine.run(reqs, num_decode_req=len(reqs), profile_ops=True)
 
     engine.reset()
@@ -130,8 +130,8 @@ def profile_prefill_ms(
     all_times: Optional[Dict[str, float]] = None
 
     for i in range(warmup + 1):
-        reqs = _make_requests(batch, prompt_len, 1)
-        _cuda_sync()
+        reqs = make_requests(batch, prompt_len, 1)
+        cuda_sync()
         _, op_times = engine.run(reqs, num_decode_req=0, profile_ops=True)
         engine.reset()
         if i == warmup:
@@ -168,8 +168,8 @@ def experiment_q2_1(engine: Engine) -> None:
         op_rows.append(row)
         print(f"    last-step ops: {op_t}")
 
-    _write_csv(RESULTS_DIR / "q2_1_time_vs_decode_len.csv", time_rows)
-    _write_csv(RESULTS_DIR / "q2_1_last_decode_ops.csv", op_rows)
+    write_csv(RESULTS_DIR / "q2_1_time_vs_decode_len.csv", time_rows)
+    write_csv(RESULTS_DIR / "q2_1_last_decode_ops.csv", op_rows)
 
     x = [r["log2_decode_len"] for r in time_rows]
     fig, ax = plt.subplots()
@@ -219,7 +219,7 @@ def experiment_q2_2(engine: Engine) -> None:
         row.update(op_t)
         rows.append(row)
 
-    _write_csv(RESULTS_DIR / "q2_2_prefill_breakdown.csv", rows)
+    write_csv(RESULTS_DIR / "q2_2_prefill_breakdown.csv", rows)
 
     x = [r["log2_prefill_len"] for r in rows]
     op_keys = [
@@ -283,7 +283,7 @@ def experiment_q2_3(engine: Engine) -> None:
             }
         )
 
-    _write_csv(RESULTS_DIR / "q2_3_batch_sweep.csv", rows)
+    write_csv(RESULTS_DIR / "q2_3_batch_sweep.csv", rows)
 
     x = [r["log2_batch"] for r in rows]
 

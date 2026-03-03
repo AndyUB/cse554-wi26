@@ -1,11 +1,8 @@
 import pandas as pd
 
-# CUTLASS raw output
 cut = pd.read_csv("keep.cutlass_raw.gemm.csv")
 
 # CUTLASS CSV usually has columns like: m,n,k,Provider,Operation,Runtime,GFLOPs,...
-# We want best GFLOPs for each (m,n,k) over all kernels and split_k values.
-# The exact column name can be "GFLOPs" or "GFLOP/s" depending on version; handle both.
 gflop_col = None
 for c in ["GFLOPs", "GFLOP/s", "gflop/s", "gflops"]:
     if c in cut.columns:
@@ -23,7 +20,7 @@ idx = cut.groupby(["m", "n", "k"])[gflop_col].idxmax()
 
 best = cut.loc[idx].reset_index(drop=True)
 
-best["batch_size"] = best["m"]              # align with your plot script
+best["batch_size"] = best["m"]
 best["N"] = best["n"]
 best["K"] = best["k"]
 best["library"] = "cutlass"

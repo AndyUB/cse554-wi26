@@ -3,16 +3,11 @@ set -euo pipefail
 
 PROF=../cutlass/build/tools/profiler/cutlass_profiler
 
-OUT_BASE=cutlass_raw   # will produce cutlass_raw.gemm.csv
+OUT_BASE=cutlass_raw
 rm -f ${OUT_BASE}.gemm.csv
 
-# M sweep: 128..2048 step 128
 M_RANGE="128:2048:128"
-
-# (N,K) cases
 CASES=("512 512" "4096 4096" "14336 4096" "4096 1024" "1024 4096")
-
-# Split-K sweep
 SPLITS=(1 2 4 8)
 
 for nk in "${CASES[@]}"; do

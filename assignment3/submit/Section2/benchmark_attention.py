@@ -37,15 +37,15 @@ class BenchCfg:
     device: str = "cuda"
 
 
-def _cuda_sync() -> None:
+def cuda_sync() -> None:
     if torch.cuda.is_available():
         torch.cuda.synchronize()
 
 
-def _time_cuda(fn, warmup: int, iters: int) -> float:
+def time_cuda(fn, warmup: int, iters: int) -> float:
     for _ in range(warmup):
         fn()
-    _cuda_sync()
+    cuda_sync()
 
     start = torch.cuda.Event(enable_timing=True)
     end = torch.cuda.Event(enable_timing=True)
@@ -53,13 +53,13 @@ def _time_cuda(fn, warmup: int, iters: int) -> float:
     for _ in range(iters):
         fn()
     end.record()
-    _cuda_sync()
+    cuda_sync()
     return start.elapsed_time(end) / iters
 
 
-def _safe_time_cuda(fn, warmup: int, iters: int) -> float:
+def safe_time_cuda(fn, warmup: int, iters: int) -> float:
     try:
-        return _time_cuda(fn, warmup, iters)
+        return time_cuda(fn, warmup, iters)
     except torch.cuda.OutOfMemoryError:
         torch.cuda.synchronize()
         torch.cuda.empty_cache()
@@ -77,7 +77,7 @@ def bench_prefill_once(
     k = torch.randn(batch, h_kv, p, d, device=cfg.device, dtype=cfg.dtype)
     v = torch.randn(batch, h_kv, p, d, device=cfg.device, dtype=cfg.dtype)
 
-    t_sdpa_ms = _safe_time_cuda(
+    t_sdpa_ms = safe_time_cuda(
         lambda: F.scaled_dot_product_attention(
             q, k, v, is_causal=True, enable_gqa=True
         ),
@@ -97,7 +97,7 @@ def bench_prefill_once(
     prefill_wrapper = flashinfer.BatchPrefillWithRaggedKVCacheWrapper(workspace)
     prefill_wrapper.plan(qo_indptr, kv_indptr, h_q, h_kv, d, causal=True)
 
-    t_flashinfer_ms = _time_cuda(
+    t_flashinfer_ms = time_cuda(
         lambda: prefill_wrapper.run(q_fi, k_fi, v_fi),
         cfg.warmup,
         cfg.iters,
@@ -121,7 +121,7 @@ def bench_decode_once(
     k_cache = torch.randn(batch, h_kv, c, d, device=cfg.device, dtype=cfg.dtype)
     v_cache = torch.randn(batch, h_kv, c, d, device=cfg.device, dtype=cfg.dtype)
 
-    t_sdpa_ms = _safe_time_cuda(
+    t_sdpa_ms = safe_time_cuda(
         lambda: F.scaled_dot_product_attention(
             q, k_cache, v_cache, is_causal=False, enable_gqa=True
         ),
@@ -168,7 +168,7 @@ def bench_decode_once(
         data_type=cfg.dtype,
     )
 
-    t_flashinfer_ms = _time_cuda(
+    t_flashinfer_ms = time_cuda(
         lambda: decode_wrapper.run(q_fi, kv_paged),
         cfg.warmup,
         cfg.iters,
@@ -180,7 +180,7 @@ def bench_decode_once(
     return sdpa_gbps, flashinfer_gbps
 
 
-def _write_csv(path: Path, rows: list[Dict[str, float]]) -> None:
+def write_csv(path: Path, rows: list[Dict[str, float]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
@@ -265,11 +265,11 @@ def run_all(cfg: BenchCfg, out_dir: Path) -> None:
                 {"model": model_name, "page_size": page_size, "flashinfer_gbps": fi}
             )
 
-    _write_csv(out_dir / "prefill_vs_p.csv", prefill_p_rows)
-    _write_csv(out_dir / "prefill_vs_batch.csv", prefill_batch_rows)
-    _write_csv(out_dir / "decode_vs_c.csv", decode_c_rows)
-    _write_csv(out_dir / "decode_vs_batch.csv", decode_batch_rows)
-    _write_csv(out_dir / "decode_vs_page_size.csv", decode_page_rows)
+    write_csv(out_dir / "prefill_vs_p.csv", prefill_p_rows)
+    write_csv(out_dir / "prefill_vs_batch.csv", prefill_batch_rows)
+    write_csv(out_dir / "decode_vs_c.csv", decode_c_rows)
+    write_csv(out_dir / "decode_vs_batch.csv", decode_batch_rows)
+    write_csv(out_dir / "decode_vs_page_size.csv", decode_page_rows)
 
 
 if __name__ == "__main__":

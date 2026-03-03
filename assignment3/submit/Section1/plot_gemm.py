@@ -1,14 +1,8 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# Load CSV
-# batch_size,N,K,library,tflops
 df = pd.read_csv('gemm_perf.csv')
-
-# Get all unique (N, K) shapes
 shapes = df[['N', 'K']].drop_duplicates().values.tolist()
-
-# Plot for each shape
 for N, K in shapes:
     shape_df = df[(df['N'] == N) & (df['K'] == K)]
     batch_sizes = sorted(shape_df['batch_size'].unique())
