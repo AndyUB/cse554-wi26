@@ -1,0 +1,32 @@
+CSE 554: Systems for Machine Learning – Assignment 4
+In this assignment, you will implement the continuous batching and chunked prefill to enhance the scheduler, as well as extend the pipeline to multiple GPUs.  Your submission will be in the form of a .zip file upload on Canvas, and must include a short report with answers to the following questions (.pdf) and the code. 
+
+Section 1: Continuous Batching and Chunked Prefill
+Q1.  10 + 10 points
+Implement the continuous batching in files Section1/continous_engine.py and Section1/continuous_scheduler.py
+With batch size 10, input length following a uniform distribution between [1,10], output length following a uniform distribution between [1, 128], profile the end-to-end execution time of naive scheduling and continuous batching serving 100 requests. What is the speedup over naive scheduling?
+
+Q2. 10 + 10 + 10 points
+Implement chunked prefill in Section1/chunked_engine.py and Section1/chunked_scheduler.py. Control the maximum token batch size to be 512  in each iteration.
+With the input length following a lognormal distribution with u = 6, sigma = 0.7, and the output length following a uniform distribution between [1, 512], profile the end-to-end execution time of the chunked prefill solution. How does it compare with continuous batching?
+Compare the iteration time of continuous batching and chunked prefill by plotting them as scatter plots, with iteration id as the x-axis. What is the difference?
+
+Q3. 10 + 10 points
+Profile vLLM performance with llama-3.2-1B, with input length 512, output length 512, request number 100. You can use the benchmark command here https://docs.vllm.ai/en/stable/cli/bench/throughput/ 
+Profile your own chunked prefill performance with input length 512, output length 512, and 100 requests. How does that compare with vLLM? Which part (attention, FFN, other small kernels, overheads, etc) of vLLM is faster than your own implementation? 
+
+Section 2: Parallelism
+GPU assignment for this question: You need two GPUs for this question. If you were assigned GPU index i (0-indexed) in previous assignments, use the following GPU pair:
+GPUs: (i // 2) * 2 and (i // 2) * 2 + 1
+Examples:
+If i = 0, use GPUs 0 and 1
+If i = 5, use GPUs 4 and 5
+
+
+Q4. 10 + 10 + 10 + 10 points
+Profile the network bandwidth utilization of PyTorch’s all-reduce collective communication by running the script in Section2/profile_allreduce.py. What trend do you observe from the bandwidth utilization figure generated? How does the achieved network bandwidth utilization compare to the theoretical network bandwidth?
+To calculate theoretical network bandwidth, use nvidia-smi topo -m to output the network topology of the cluster
+You are given the transformer implementation for Lama-3.2-1B shown in class in Section2/transformer-w3l1.py. Now we want to extend this implementation to support running Lama-3.2-1B using tensor parallelism of degree 2. Implement the tensor-parallel version of the attention block in Section2/transformer-tp2.py. Note that Q/K/V projection weights are split by head, and the output projection weight is split by row (refer to Lecture 14, Slide 32).
+Implement the tensor-parallel version of the feed-forward network in Section2/transformer-tp2.py. Note that the up and gate weights are split by column, and the down projection weight is split by row (refer to Lecture 14, Slide 31). You are expected to see the same output as running the original single-GPU implementation in Section2/transformer-w3l1.py.
+Run torchrun --nproc-per-node=2 Section2/transformer-tp2-answer.py to test your implementation. This will set up ranks and world size for 2 GPUs automatically
+Profile the generation time for the tensor-parallel version of the Lama-3.2-1B implementation and compare it with the generation time for the original implementation. Is the generation time faster for the tensor-parallel version? If so, what are the reasons that lead to the speed-up? If not, what are the reasons causing the overheads?
