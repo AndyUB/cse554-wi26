@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(chmod +x /local1/groups/554g13/cse554-winter-2026/assignment4/Section1/run_profiling.sh)",
+      "Bash(bash run_profiling.sh)"
+    ]
+  }
+}

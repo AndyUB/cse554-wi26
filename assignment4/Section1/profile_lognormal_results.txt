@@ -1,0 +1,17 @@
+Building workload …
+  Input  words: mean=379.3, min=103, max=512
+  Output len  : mean=260.3, min=2, max=511
+  KV pool size: 8000 pages per engine
+
+Loading continuous batching engine …
+Loading safetensors:   0%|          | 0/12 [00:00<?, ?it/s]Loading safetensors: 100%|██████████| 12/12 [00:00<00:00, 2472.69it/s]
+[Continuous]      100 requests  |  7.658 s
+Loading chunked prefill engine …
+Loading safetensors:   0%|          | 0/12 [00:00<?, ?it/s]Loading safetensors: 100%|██████████| 12/12 [00:00<00:00, 2775.54it/s]
+[Chunked prefill] 100 requests  |  7.416 s
+
+──────────────────────────────────────────────────
+Continuous batching time : 7.658 s
+Chunked prefill time     : 7.416 s
+Chunked is 1.03x faster than continuous
+──────────────────────────────────────────────────

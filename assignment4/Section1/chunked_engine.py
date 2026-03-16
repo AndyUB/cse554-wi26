@@ -246,11 +246,9 @@ class Engine:
                 if idx < num_decode_req:  # decode - feed only *last* token
                     pieces.append(req.output_token_ids[-1:])
                     indptr.append(indptr[-1] + 1)
-                else:                     # prefill
-                    pass
-                    #########
-                    # FIXME #
-                    #########
+                else:                     # prefill - use the scheduled chunk
+                    pieces.append(req.scheduling_pf_tokens)
+                    indptr.append(indptr[-1] + req.scheduling_length)
 
             input_tensor = torch.cat(pieces).to("cuda")
             # print(f"batch size {len(input_tensor)}")
@@ -271,9 +269,8 @@ class Engine:
             # ----------------------------------------------------------------
             for idx, req in enumerate(requests):
                 cache = self.kv_cache_map[req.request_id]
-                #########
-                # FIXME #
-                #########
+                tokens_to_add = 1 if idx < num_decode_req else req.scheduling_length
+                cache.allocate_tokens(tokens_to_add)
 
             seq_lens_after = [self.kv_cache_map[r.request_id].seqlen for r in requests]
             seq_lens_after_t = torch.tensor(seq_lens_after, dtype=torch.int32, device="cuda")
@@ -286,9 +283,40 @@ class Engine:
             # ----------------------------------------------------------------
             # 4) Plan FlashInfer execution for this micro-batch
             # ----------------------------------------------------------------
-            #########
-            # FIXME #
-            #########
+            num_prefill_req = len(requests) - num_decode_req
+            num_decode_tokens = num_decode_req
+            decode_kv_end = kv_indptr[num_decode_req].item()
+
+            if num_prefill_req > 0:
+                prefill_qo_indptr = indptr_tensor[num_decode_req:] - indptr_tensor[num_decode_req]
+                prefill_kv_indptr = kv_indptr[num_decode_req:] - kv_indptr[num_decode_req]
+                prefill_kv_indices_slice = kv_indices[decode_kv_end:]
+                prefill_kv_last_page_len_slice = kv_last_page_len[num_decode_req:]
+                self.prefill_wrapper.begin_forward(
+                    prefill_qo_indptr,
+                    prefill_kv_indptr,
+                    prefill_kv_indices_slice,
+                    prefill_kv_last_page_len_slice,
+                    self.num_qo_heads,
+                    self.num_kv_heads,
+                    self.head_dim,
+                    self.page_size,
+                )
+
+            if num_decode_req > 0:
+                decode_kv_indptr_slice = kv_indptr[:num_decode_req + 1]
+                decode_kv_indices_slice = kv_indices[:decode_kv_end]
+                decode_kv_last_page_len_slice = kv_last_page_len[:num_decode_req]
+                self.decode_wrapper.begin_forward(
+                    decode_kv_indptr_slice,
+                    decode_kv_indices_slice,
+                    decode_kv_last_page_len_slice,
+                    self.num_qo_heads,
+                    self.num_kv_heads,
+                    self.head_dim,
+                    self.page_size,
+                    data_type=torch.float16,
+                )
 
             # ----------------------------------------------------------------
             # 5) Forward pass through all *transformer* layers
@@ -348,10 +376,27 @@ class Engine:
                 )
 
                 # ---- Attention itself --------------------------------------
-                attn_out = None
-                #########
-                # FIXME #
-                #########
+                total_tokens = q.size(0)
+                attn_out = torch.empty(
+                    total_tokens, self.num_qo_heads, self.head_dim,
+                    dtype=torch.float16, device="cuda"
+                )
+
+                if num_decode_req > 0:
+                    decode_out = self.decode_wrapper.forward(
+                        q[:num_decode_tokens],
+                        (self.pool.k_datas[layer], self.pool.v_datas[layer]),
+                    )
+                    attn_out[:num_decode_tokens] = decode_out
+
+                if num_prefill_req > 0:
+                    prefill_out = self.prefill_wrapper.forward(
+                        q[num_decode_tokens:],
+                        (self.pool.k_datas[layer], self.pool.v_datas[layer]),
+                    )
+                    attn_out[num_decode_tokens:] = prefill_out
+
+                attn_out = attn_out.view(total_tokens, self.num_qo_heads * self.head_dim)
                 
                 # Residual connection
                 hidden = attn_out.matmul(self.weights["o_proj_weight"][layer].T) + hidden

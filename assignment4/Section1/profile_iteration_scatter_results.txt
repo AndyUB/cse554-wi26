@@ -1,0 +1,25 @@
+Running continuous batching …
+Loading safetensors:   0%|          | 0/12 [00:00<?, ?it/s]Loading safetensors: 100%|██████████| 12/12 [00:00<00:00, 2511.31it/s]
+  Continuous: 511 iterations, mean=13.7 ms, max=1413.2 ms
+Running chunked prefill …
+Loading safetensors:   0%|          | 0/12 [00:00<?, ?it/s]Loading safetensors: 100%|██████████| 12/12 [00:00<00:00, 2730.81it/s]
+  Chunked:    582 iterations, mean=13.1 ms, max=370.8 ms
+Raw data saved → iteration_times.json
+Scatter plot saved → iteration_times_scatter.png
+
+───────────────────────────────────────────────────────
+Metric                           Continuous    Chunked
+───────────────────────────────────────────────────────
+  Continuous
+    Iterations   : 511
+    Mean   (ms)  : 13.69
+    Median (ms)  : 10.40
+    P99    (ms)  : 12.34
+    Max    (ms)  : 1413.18
+  Chunked
+    Iterations   : 582
+    Mean   (ms)  : 13.14
+    Median (ms)  : 10.58
+    P99    (ms)  : 25.73
+    Max    (ms)  : 370.79
+───────────────────────────────────────────────────────
