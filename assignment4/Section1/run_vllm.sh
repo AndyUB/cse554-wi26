@@ -22,8 +22,8 @@ export CUDA_VISIBLE_DEVICES=6
 PYTHONPATH=/local1/groups/554g13/cse554-winter-2026/vllm_env /local1/groups/554g13/cse554-winter-2026/vllm_env/bin/vllm bench throughput \
   --model "${MODEL_PATH}" \
   --dataset-name random \
-  --input-len "${INPUT_LEN}" \
-  --output-len "${OUTPUT_LEN}" \
+  --random-input-len "${INPUT_LEN}" \
+  --random-output-len "${OUTPUT_LEN}" \
   --num-prompts "${NUM_PROMPTS}" \
   --output-json "${OUTPUT_JSON}" \
   --profile \
