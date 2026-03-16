@@ -1,0 +1,11 @@
+Loading safetensors:   0%|          | 0/12 [00:00<?, ?it/s]Loading safetensors: 100%|██████████| 12/12 [00:00<00:00, 2526.18it/s]
+Breakdown saved: profile_chunked_breakdown.json
+
+=== Chunked breakdown (direct timed) ===
+Wall time: 10.350 s
+GPU total (timed in engine): 9.805 s
+  attention      4.145 s (42.3% GPU, 40.0% wall)
+  ffn            3.460 s (35.3% GPU, 33.4% wall)
+  norm           0.536 s (5.5% GPU, 5.2% wall)
+  other_ops      0.861 s (8.8% GPU, 8.3% wall)
+  overheads      0.545 s (5.3% wall)

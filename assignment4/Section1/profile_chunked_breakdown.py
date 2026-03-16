@@ -35,12 +35,16 @@ def make_workload(tokenizer):
     requests: list[Request] = []
     for uid in range(NUM_REQUESTS):
         prompt_ids = torch.full((INPUT_LEN,), token_id, dtype=torch.long)
-        requests.append(Request(req_id=uid, prompt_ids=prompt_ids, target_len=OUTPUT_LEN))
+        requests.append(
+            Request(req_id=uid, prompt_ids=prompt_ids, target_len=OUTPUT_LEN)
+        )
     return requests
 
 
 def warmup(engine: Engine):
-    dummy = Request(req_id=-99, prompt_ids=torch.tensor([1], dtype=torch.long), target_len=1)
+    dummy = Request(
+        req_id=-99, prompt_ids=torch.tensor([1], dtype=torch.long), target_len=1
+    )
     dummy.scheduling_pf_tokens = dummy.prompt_token_ids
     dummy.last_chunk = True
     engine.run([dummy], num_decode_req=0)
@@ -89,7 +93,7 @@ def run_chunked_breakdown(output_json: Path):
     del tokenizer
 
     engine = Engine(enable_timing=True)
-    shrink_pool(engine, MAX_PAGES)
+    # shrink_pool(engine, MAX_PAGES)
     scheduler = Scheduler(engine, token_batch_size=TOKEN_BUDGET)
     scheduler.pending_prefill = list(requests)
 
@@ -109,7 +113,9 @@ def run_chunked_breakdown(output_json: Path):
     elapsed = time.perf_counter() - t_start
 
     total_input = NUM_REQUESTS * INPUT_LEN
-    total_output = sum(req.current_length - req.prompt_length for req in scheduler.completed)
+    total_output = sum(
+        req.current_length - req.prompt_length for req in scheduler.completed
+    )
     total_tokens = total_input + total_output
 
     engine_timing_ms = engine.get_timing_totals_ms()
@@ -146,7 +152,9 @@ def print_summary(summary: dict):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Generate direct GPU-time breakdown for chunked engine")
+    parser = argparse.ArgumentParser(
+        description="Generate direct GPU-time breakdown for chunked engine"
+    )
     parser.add_argument("--output-json", default="profile_chunked_breakdown.json")
     args = parser.parse_args()
 
