@@ -44,7 +44,9 @@
       "Bash(PYTHONPATH=/local1/groups/554g13/cse554-winter-2026/vllm_env python /local1/groups/554g13/cse554-winter-2026/vllm_env/vllm/benchmarks/throughput.py --help)",
       "Bash(PYTHONPATH=/local1/groups/554g13/cse554-winter-2026/vllm_env vllm bench throughput --help)",
       "Bash(PYTHONPATH=/local1/groups/554g13/cse554-winter-2026/vllm_env /local1/groups/554g13/cse554-winter-2026/vllm_env/bin/vllm bench throughput --help)",
-      "Bash(PYTHONPATH=/local1/groups/554g13/cse554-winter-2026/vllm_env /local1/groups/554g13/cse554-winter-2026/vllm_env/bin/vllm bench throughput --help=all)"
+      "Bash(PYTHONPATH=/local1/groups/554g13/cse554-winter-2026/vllm_env /local1/groups/554g13/cse554-winter-2026/vllm_env/bin/vllm bench throughput --help=all)",
+      "Bash(bash profile_vllm.sh)",
+      "Bash(tee profile_vllm.log)"
     ]
   }
 }

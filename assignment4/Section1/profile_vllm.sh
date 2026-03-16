@@ -12,6 +12,7 @@ GENERATE_BREAKDOWN="${GENERATE_BREAKDOWN:-1}"
 
 export PYTHONPATH="${VLLM_ENV}:${SCRIPT_DIR}/../..${PYTHONPATH:+:$PYTHONPATH}"
 export PATH="${VLLM_ENV}/bin:${PATH}"
+export CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-6}"
 
 echo "Running vLLM benchmark"
 echo "  model=${MODEL_PATH}"
@@ -27,7 +28,6 @@ vllm bench throughput \
   --output-json "${OUTPUT_JSON}" \
   --disable-detokenize \
   --tensor-parallel-size 1 \
-  --profile \
   --dtype float16
 
 python - <<'PY' "${OUTPUT_JSON}"
