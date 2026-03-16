@@ -27,13 +27,17 @@ echo " input=512, output=512, 100 requests"
 echo "================================================"
 echo ""
 
-echo "--- [1/2] vLLM benchmark ---"
+echo "--- [1/3] vLLM benchmark + breakdown ---"
 cd "$SCRIPT_DIR"
-python profile_vllm.py 2>&1 | tee profile_vllm_stdout.txt
+GENERATE_BREAKDOWN=1 bash profile_vllm.sh 2>&1 | tee profile_vllm_stdout.txt
 echo ""
 
-echo "--- [2/2] Our chunked-prefill benchmark ---"
-python profile_chunked_fixed.py 2>&1 | tee profile_chunked_fixed_stdout.txt
+echo "--- [2/3] Our chunked-prefill benchmark + breakdown ---"
+python profile_chunked_breakdown.py --backend chunked --out-dir "$SCRIPT_DIR" 2>&1 | tee profile_chunked_fixed_stdout.txt
+echo ""
+
+echo "--- [3/3] Combined breakdown comparison ---"
+python profile_chunked_breakdown.py --backend both --out-dir "$SCRIPT_DIR" 2>&1 | tee profile_breakdown_stdout.txt
 echo ""
 
 # ── Side-by-side summary ───────────────────────────────────────────────────────
@@ -42,19 +46,16 @@ echo " Summary"
 echo "================================================"
 
 VLLM_TPUT=$(python -c "
-import json, sys
+import json
 try:
     d = json.load(open('profile_vllm_results.json'))
-    # vLLM reports 'throughput' in requests/s; also report tokens/s
-    tput_req = d.get('throughput', 0)
-    # total tokens = num_prompts * (input + output)
     total_tok = 100 * (512 + 512)
-    elapsed   = d.get('elapsed_time', None)
+    elapsed = d.get('elapsed_time', None)
     if elapsed:
         print(f'{total_tok/elapsed:.1f}')
     else:
         print('N/A')
-except Exception as e:
+except Exception:
     print('N/A')
 " 2>/dev/null)
 
@@ -62,19 +63,17 @@ VLLM_ELAPSED=$(python -c "
 import json
 try:
     d = json.load(open('profile_vllm_results.json'))
-    print(f\"{d.get('elapsed_time', 'N/A'):.3f}\")
-except:
+    print(f\"{float(d.get('elapsed_time', 0.0)):.3f}\")
+except Exception:
     print('N/A')
 " 2>/dev/null)
 
 CHUNK_ELAPSED=$(python -c "
 import json
 try:
-    d = json.load(open('profile_chunked_fixed_itertimes.json'))
-    import numpy as np
-    iters = np.array(d['iter_times_ms'])
-    print(f'{iters.sum()/1000:.3f}')
-except:
+    d = json.load(open('profile_chunked_results.json'))
+    print(f\"{float(d['elapsed_s']):.3f}\")
+except Exception:
     print('N/A')
 " 2>/dev/null)
 
@@ -84,5 +83,6 @@ echo "  vLLM throughput (tok/s) : ${VLLM_TPUT}"
 echo ""
 echo "  Chunked-prefill elapsed : ${CHUNK_ELAPSED} s"
 echo ""
-echo "See profile_vllm_results.json and profile_chunked_fixed_itertimes.json for full data."
+echo "See profile_vllm_results.json, profile_chunked_results.json," \
+     "profile_vllm_breakdown.json, and profile_chunked_breakdown.json for full data."
 echo "================================================"
