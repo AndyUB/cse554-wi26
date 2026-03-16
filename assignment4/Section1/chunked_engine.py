@@ -181,7 +181,7 @@ class Engine:
     # ---------------------------------------------------------------------
     #  Initialisation
     # ---------------------------------------------------------------------
-    def __init__(self) -> None:
+    def __init__(self, enable_timing: bool = False) -> None:
         # ---- model hyper-parameters --------------------------------------
         self.weight_path = "/local1/cse554/models/meta-llama/Llama-3.2-1B"
         self.head_dim = 64    
@@ -221,6 +221,22 @@ class Engine:
         self.decode_wrapper = flashinfer.BatchDecodeWithPagedKVCacheWrapper(
             self._fi_workspace, "HND", use_tensor_cores=True)
 
+        self.enable_timing = enable_timing
+        self._timing_totals_ms: dict[str, float] = {
+            "attention": 0.0,
+            "ffn": 0.0,
+            "norm": 0.0,
+            "other": 0.0,
+            "total": 0.0,
+        }
+
+    def reset_timing(self):
+        for key in self._timing_totals_ms:
+            self._timing_totals_ms[key] = 0.0
+
+    def get_timing_totals_ms(self) -> dict[str, float]:
+        return dict(self._timing_totals_ms)
+
     # ---------------------------------------------------------------------
     #  One *step* (mixed prefill + decode) over an *arbitrary* request batch
     # ---------------------------------------------------------------------
@@ -236,6 +252,17 @@ class Engine:
             Those will feed only their **last** token; the rest are prefills.
         """
         with torch.inference_mode():
+            if self.enable_timing:
+                timing_pairs: dict[str, list[tuple[torch.cuda.Event, torch.cuda.Event]]] = {
+                    "attention": [],
+                    "ffn": [],
+                    "norm": [],
+                    "other": [],
+                }
+                ev_total_start = torch.cuda.Event(enable_timing=True)
+                ev_total_end = torch.cuda.Event(enable_timing=True)
+                ev_total_start.record()
+
             # ----------------------------------------------------------------
             # 1) Build ragged *input* tensor and its CSR *indptr*
             # ----------------------------------------------------------------
@@ -321,13 +348,31 @@ class Engine:
             # ----------------------------------------------------------------
             # 5) Forward pass through all *transformer* layers
             # ----------------------------------------------------------------
+            if self.enable_timing:
+                ev_other_start = torch.cuda.Event(enable_timing=True)
+                ev_other_end = torch.cuda.Event(enable_timing=True)
+                ev_other_start.record()
             hidden = self.weights["embedding"][input_tensor]
+            if self.enable_timing:
+                ev_other_end.record()
+                timing_pairs["other"].append((ev_other_start, ev_other_end))
 
             for layer in range(self.layers):
                 # === Self-attention sub-layer ==================================
+                if self.enable_timing:
+                    ev_norm_start = torch.cuda.Event(enable_timing=True)
+                    ev_norm_end = torch.cuda.Event(enable_timing=True)
+                    ev_norm_start.record()
                 rms = torch.sqrt(hidden.square().mean(-1, keepdim=True) + 1e-5)
                 ln_attn_in = (hidden / rms).to(torch.float16) * self.weights["layernormAttn_weight"][layer]
+                if self.enable_timing:
+                    ev_norm_end.record()
+                    timing_pairs["norm"].append((ev_norm_start, ev_norm_end))
 
+                if self.enable_timing:
+                    ev_attn_start = torch.cuda.Event(enable_timing=True)
+                    ev_attn_end = torch.cuda.Event(enable_timing=True)
+                    ev_attn_start.record()
                 k = (
                     ln_attn_in
                     .matmul(self.weights["self_attn_k_proj_weight"][layer].T)
@@ -400,11 +445,25 @@ class Engine:
                 
                 # Residual connection
                 hidden = attn_out.matmul(self.weights["o_proj_weight"][layer].T) + hidden
+                if self.enable_timing:
+                    ev_attn_end.record()
+                    timing_pairs["attention"].append((ev_attn_start, ev_attn_end))
 
                 # === FFN sub-layer ==========================================
+                if self.enable_timing:
+                    ev_norm_start = torch.cuda.Event(enable_timing=True)
+                    ev_norm_end = torch.cuda.Event(enable_timing=True)
+                    ev_norm_start.record()
                 rms = torch.sqrt(hidden.square().mean(-1, keepdim=True) + 1e-5)
                 ln_ffn_in = (hidden / rms).to(torch.float16) * self.weights["layernormFFN_weight"][layer]
+                if self.enable_timing:
+                    ev_norm_end.record()
+                    timing_pairs["norm"].append((ev_norm_start, ev_norm_end))
 
+                if self.enable_timing:
+                    ev_ffn_start = torch.cuda.Event(enable_timing=True)
+                    ev_ffn_end = torch.cuda.Event(enable_timing=True)
+                    ev_ffn_start.record()
                 up = ln_ffn_in.matmul(self.weights["up_proj_weight"][layer].T)
                 gate = ln_ffn_in.matmul(self.weights["gate_proj_weight"][layer].T)
                 hidden = (
@@ -412,16 +471,41 @@ class Engine:
                     .matmul(self.weights["down_proj_weight"][layer].T)
                     + hidden
                 )
+                if self.enable_timing:
+                    ev_ffn_end.record()
+                    timing_pairs["ffn"].append((ev_ffn_start, ev_ffn_end))
 
             # ----------------------------------------------------------------
             # 6) Final language-model head ----------------------------------
+            if self.enable_timing:
+                ev_norm_start = torch.cuda.Event(enable_timing=True)
+                ev_norm_end = torch.cuda.Event(enable_timing=True)
+                ev_norm_start.record()
             rms = torch.sqrt(hidden.square().mean(-1, keepdim=True) + 1e-5)
+            if self.enable_timing:
+                ev_norm_end.record()
+                timing_pairs["norm"].append((ev_norm_start, ev_norm_end))
+
+            if self.enable_timing:
+                ev_other_start = torch.cuda.Event(enable_timing=True)
+                ev_other_end = torch.cuda.Event(enable_timing=True)
+                ev_other_start.record()
             logits = (
                 (hidden / rms).to(torch.float16) * self.weights["model_layernorm_weight"]
             ).matmul(self.weights["lm_head_weight"].T)
 
             sample_ids = torch.argmax(logits, dim=-1)
+            if self.enable_timing:
+                ev_other_end.record()
+                timing_pairs["other"].append((ev_other_start, ev_other_end))
 
             # Extract *new* token for each request (last token of each row)
             last_token_indices = (indptr_tensor[1:] - 1).long()
+            if self.enable_timing:
+                ev_total_end.record()
+                torch.cuda.synchronize()
+                for bucket, pairs in timing_pairs.items():
+                    for start_ev, end_ev in pairs:
+                        self._timing_totals_ms[bucket] += start_ev.elapsed_time(end_ev)
+                self._timing_totals_ms["total"] += ev_total_start.elapsed_time(ev_total_end)
             return sample_ids[last_token_indices].cpu()

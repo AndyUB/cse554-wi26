@@ -20,10 +20,9 @@ from chunked_scheduler import Scheduler as ChunkScheduler, InputRequest as Chunk
 SEED = 42
 NUM_REQUESTS = 100
 TOKEN_BUDGET = 512
-CONT_BATCH_SZ = 512
+CONT_BATCH_SZ = 10
 MAX_INPUT_TOKENS = 512
 MAX_OUTPUT_TOKENS = 512
-MAX_PAGES_PROFILING = 8000
 BASE_WORDS = (
     "the quick brown fox jumps over the lazy dog "
     "a b c d e f g h i j k l m n o p q r s t u v w x y z "
@@ -46,28 +45,12 @@ def make_workload(seed: int = SEED):
     return cont_requests, chunk_requests
 
 
-def shrink_pool(
-    engine: ContEngine | ChunkEngine,
-    KVPoolClass: type[ContKVPool | ChunkKVPool],
-    max_pages: int,
-):
-    old = engine.pool
-    del old.k_datas, old.v_datas
-    engine.pool = KVPoolClass(
-        num_layers=engine.layers,
-        num_kv_heads=engine.num_kv_heads,
-        head_dim=engine.head_dim,
-        capacity=max_pages,
-        page_size=engine.page_size,
-    )
-    engine.max_pages = max_pages
-    torch.cuda.empty_cache()
-
-
 def warmup(engine: ContEngine | ChunkEngine):
     mod = sys.modules[type(engine).__module__]
     request_cls = mod.Request
-    dummy = request_cls(req_id=-99, prompt_ids=torch.tensor([1], dtype=torch.long), target_len=1)
+    dummy = request_cls(
+        req_id=-99, prompt_ids=torch.tensor([1], dtype=torch.long), target_len=1
+    )
     if hasattr(dummy, "scheduling_pf_tokens"):
         dummy.scheduling_pf_tokens = dummy.prompt_token_ids
         dummy.last_chunk = True
@@ -78,9 +61,10 @@ def warmup(engine: ContEngine | ChunkEngine):
     torch.cuda.synchronize()
 
 
-def benchmark_continuous(workload: list[ContRequest], collect_iteration_times: bool = False):
+def benchmark_continuous(
+    workload: list[ContRequest], collect_iteration_times: bool = False
+):
     engine = ContEngine()
-    shrink_pool(engine, ContKVPool, MAX_PAGES_PROFILING)
     scheduler = ContScheduler(engine, req_batch_size=CONT_BATCH_SZ)
     for req in workload:
         scheduler.add_req(req)
@@ -107,9 +91,10 @@ def benchmark_continuous(workload: list[ContRequest], collect_iteration_times: b
     return elapsed, iter_times_ms
 
 
-def benchmark_chunked(workload: list[ChunkRequest], collect_iteration_times: bool = False):
+def benchmark_chunked(
+    workload: list[ChunkRequest], collect_iteration_times: bool = False
+):
     engine = ChunkEngine()
-    shrink_pool(engine, ChunkKVPool, MAX_PAGES_PROFILING)
     scheduler = ChunkScheduler(engine, token_batch_size=TOKEN_BUDGET)
     for req in workload:
         scheduler.add_req(req)
@@ -141,8 +126,22 @@ def plot_scatter(cont_times, chunk_times, out_path="iteration_times_scatter.png"
     fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
     ax = axes[0]
-    ax.scatter(range(len(cont_times)), cont_times, s=5, alpha=0.6, color="steelblue", label="Continuous batching")
-    ax.scatter(range(len(chunk_times)), chunk_times, s=5, alpha=0.6, color="darkorange", label="Chunked prefill")
+    ax.scatter(
+        range(len(cont_times)),
+        cont_times,
+        s=5,
+        alpha=0.6,
+        color="steelblue",
+        label="Continuous batching",
+    )
+    ax.scatter(
+        range(len(chunk_times)),
+        chunk_times,
+        s=5,
+        alpha=0.6,
+        color="darkorange",
+        label="Chunked prefill",
+    )
     ax.set_xlabel("Iteration ID")
     ax.set_ylabel("Iteration time (ms)")
     ax.set_title("Per-Iteration Time (full range)")
@@ -150,8 +149,22 @@ def plot_scatter(cont_times, chunk_times, out_path="iteration_times_scatter.png"
     ax.grid(True, linewidth=0.4, alpha=0.5)
 
     ax2 = axes[1]
-    ax2.scatter(range(len(cont_times)), cont_times, s=5, alpha=0.6, color="steelblue", label="Continuous batching")
-    ax2.scatter(range(len(chunk_times)), chunk_times, s=5, alpha=0.6, color="darkorange", label="Chunked prefill")
+    ax2.scatter(
+        range(len(cont_times)),
+        cont_times,
+        s=5,
+        alpha=0.6,
+        color="steelblue",
+        label="Continuous batching",
+    )
+    ax2.scatter(
+        range(len(chunk_times)),
+        chunk_times,
+        s=5,
+        alpha=0.6,
+        color="darkorange",
+        label="Chunked prefill",
+    )
     ax2.set_xlabel("Iteration ID")
     ax2.set_ylabel("Iteration time (ms)")
     ax2.set_title("Per-Iteration Time (clipped at p99)")
@@ -176,8 +189,14 @@ def print_iteration_summary(name: str, times_ms: list[float]):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Profile continuous batching vs chunked prefill")
-    parser.add_argument("--with-scatter", action="store_true", help="Collect and plot per-iteration timing scatter")
+    parser = argparse.ArgumentParser(
+        description="Profile continuous batching vs chunked prefill"
+    )
+    parser.add_argument(
+        "--with-scatter",
+        action="store_true",
+        help="Collect and plot per-iteration timing scatter",
+    )
     parser.add_argument("--scatter-json", default="iteration_times.json")
     parser.add_argument("--scatter-png", default="iteration_times_scatter.png")
     args = parser.parse_args()
@@ -194,10 +213,13 @@ def main():
         f"  Output len  : mean={sum(out_lens)/len(out_lens):.1f}, "
         f"min={min(out_lens)}, max={max(out_lens)}"
     )
-    print(f"  KV pool size: {MAX_PAGES_PROFILING} pages per engine\n")
 
-    t_cont, cont_times = benchmark_continuous(list(cont_workload), collect_iteration_times=args.with_scatter)
-    t_chunk, chunk_times = benchmark_chunked(list(chunk_workload), collect_iteration_times=args.with_scatter)
+    t_chunk, chunk_times = benchmark_chunked(
+        list(chunk_workload), collect_iteration_times=args.with_scatter
+    )
+    t_cont, cont_times = benchmark_continuous(
+        list(cont_workload), collect_iteration_times=args.with_scatter
+    )
 
     print(f"\n{'─'*50}")
     print(f"Continuous batching time : {t_cont:.3f} s")
@@ -211,7 +233,9 @@ def main():
 
     if args.with_scatter:
         with open(args.scatter_json, "w") as f:
-            json.dump({"continuous_ms": cont_times, "chunked_ms": chunk_times}, f, indent=2)
+            json.dump(
+                {"continuous_ms": cont_times, "chunked_ms": chunk_times}, f, indent=2
+            )
         print(f"Raw data saved → {args.scatter_json}")
         plot_scatter(cont_times, chunk_times, args.scatter_png)
 
