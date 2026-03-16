@@ -2,7 +2,34 @@
   "permissions": {
     "allow": [
       "Bash(chmod +x /local1/groups/554g13/cse554-winter-2026/assignment4/Section1/run_profiling.sh)",
-      "Bash(bash run_profiling.sh)"
+      "Bash(bash run_profiling.sh)",
+      "Bash(vllm --version)",
+      "Bash(python -c \"import vllm; print\\(vllm.__version__\\)\")",
+      "Read(//local1/cse554/models/meta-llama/**)",
+      "Bash(pip show:*)",
+      "Bash(conda run:*)",
+      "Read(//usr/**)",
+      "Bash(python -c \"import sys; print\\(''''\\\\n''''.join\\(sys.path\\)\\)\")",
+      "Bash(pip list:*)",
+      "Read(//local1/**)",
+      "Bash(conda env:*)",
+      "Bash(find /local1/cse554 -type f -name *.py)",
+      "Bash(python3 -c \"import vllm; print\\(vllm.__file__\\)\")",
+      "Bash(python3 -m pip list)",
+      "Bash(pip install:*)",
+      "Bash(PYTHONPATH=/local1/groups/554g13/cse554-winter-2026/vllm_env python -c \"import vllm; print\\(vllm.__version__\\)\")",
+      "Bash(PYTHONPATH=/local1/groups/554g13/cse554-winter-2026/vllm_env python -m vllm.entrypoints.benchmark_throughput --help)",
+      "Bash(PYTHONPATH=/local1/groups/554g13/cse554-winter-2026/vllm_env python -c \"from vllm.entrypoints import benchmark_throughput; print\\(''ok''\\)\")",
+      "Bash(PYTHONPATH=/local1/groups/554g13/cse554-winter-2026/vllm_env python -c \"import pkgutil, vllm.entrypoints as e; print\\([m.name for m in pkgutil.iter_modules\\(e.__path__\\)]\\)\")",
+      "Bash(PYTHONPATH=/local1/groups/554g13/cse554-winter-2026/vllm_env python -c ':*)",
+      "Bash(find /local1/groups/554g13/cse554-winter-2026/vllm_env/vllm -name bench*)",
+      "Bash(PYTHONPATH=/local1/groups/554g13/cse554-winter-2026/vllm_env python -m vllm.benchmarks.throughput --help)",
+      "Bash(chmod +x /local1/groups/554g13/cse554-winter-2026/assignment4/Section1/run_vllm_comparison.sh)",
+      "Bash(bash run_vllm_comparison.sh)",
+      "Bash(CUDA_VISIBLE_DEVICES=6 PYTHONPATH=\"/local1/groups/554g13/cse554-winter-2026/vllm_env\" VLLM_CACHE_ROOT=\"/local1/groups/554g13/cse554-winter-2026/.cache/vllm\" TRITON_CACHE_DIR=\"/local1/groups/554g13/cse554-winter-2026/.cache/triton\" TORCHINDUCTOR_CACHE_DIR=\"/local1/groups/554g13/cse554-winter-2026/.cache/inductor\" HF_HOME=\"/local1/groups/554g13/cse554-winter-2026/.cache/huggingface\" python profile_vllm.py)",
+      "Bash(head -10 grep -rn \"flashinfer.*cache\\\\|FLASHINFER_CACHE\\\\|\\\\.cache/flashinfer\" /local1/groups/554g13/cse554-winter-2026/vllm_env/flashinfer/)",
+      "Bash(python -c \"import flashinfer; print\\(flashinfer.__file__\\)\")",
+      "Bash(find /local1/groups/554g13/cse554-winter-2026/vllm_env/flashinfer -name *.py)"
     ]
   }
 }

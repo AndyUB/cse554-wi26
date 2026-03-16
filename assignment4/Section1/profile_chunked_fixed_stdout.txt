@@ -1,0 +1,18 @@
+Chunked-prefill benchmark
+  input_len=512, output_len=512, num_requests=100, token_budget=512
+
+Loading chunked-prefill engine …
+Loading safetensors:   0%|          | 0/12 [00:00<?, ?it/s]Loading safetensors: 100%|██████████| 12/12 [00:00<00:00, 2976.97it/s]
+  Requests completed : 100
+  Total input tokens : 51200
+  Total output tokens: 51200
+  Elapsed time       : 9.791 s
+  Throughput         : 10458.9 tokens/s
+
+=== Chunked-prefill benchmark results ===
+  Elapsed time  : 9.791 s
+  Throughput    : 10458.9 tokens/s
+  Iterations    : 623
+  Mean iter     : 15.71 ms
+  Median iter   : 14.16 ms
+  Max iter      : 317.45 ms
