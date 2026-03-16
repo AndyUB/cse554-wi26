@@ -29,7 +29,22 @@
       "Bash(CUDA_VISIBLE_DEVICES=6 PYTHONPATH=\"/local1/groups/554g13/cse554-winter-2026/vllm_env\" VLLM_CACHE_ROOT=\"/local1/groups/554g13/cse554-winter-2026/.cache/vllm\" TRITON_CACHE_DIR=\"/local1/groups/554g13/cse554-winter-2026/.cache/triton\" TORCHINDUCTOR_CACHE_DIR=\"/local1/groups/554g13/cse554-winter-2026/.cache/inductor\" HF_HOME=\"/local1/groups/554g13/cse554-winter-2026/.cache/huggingface\" python profile_vllm.py)",
       "Bash(head -10 grep -rn \"flashinfer.*cache\\\\|FLASHINFER_CACHE\\\\|\\\\.cache/flashinfer\" /local1/groups/554g13/cse554-winter-2026/vllm_env/flashinfer/)",
       "Bash(python -c \"import flashinfer; print\\(flashinfer.__file__\\)\")",
-      "Bash(find /local1/groups/554g13/cse554-winter-2026/vllm_env/flashinfer -name *.py)"
+      "Bash(find /local1/groups/554g13/cse554-winter-2026/vllm_env/flashinfer -name *.py)",
+      "Bash(source vllm_env/bin/activate)",
+      "Bash(python -m vllm.benchmarks.throughput --help)",
+      "Bash(source /local1/groups/554g13/cse554-winter-2026/vllm_env/bin/activate)",
+      "Bash(source /local1/groups/554g13/cse554-winter-2026/.venv/bin/activate)",
+      "Bash(VLLM_ENV=/local1/groups/554g13/cse554-winter-2026/vllm_env PYTHONPATH=\"$VLLM_ENV\" python -m vllm.benchmarks.throughput --help)",
+      "Bash(VLLM_ENV=/local1/groups/554g13/cse554-winter-2026/vllm_env PYTHONPATH=\"$VLLM_ENV\" /usr/bin/python3 -m vllm.benchmarks.throughput --help)",
+      "Read(//opt/**)",
+      "Bash(echo $PYTHONPATH)",
+      "Bash(PYTHONPATH=/local1/groups/554g13/cse554-winter-2026/vllm_env python -c \"import sys; print\\(sys.path[:3]\\); import vllm; print\\(vllm.__version__\\)\")",
+      "Bash(echo \"exit: $?\")",
+      "Bash(PYTHONPATH=/local1/groups/554g13/cse554-winter-2026/vllm_env python -m vllm.entrypoints.cli.benchmark.throughput --help)",
+      "Bash(PYTHONPATH=/local1/groups/554g13/cse554-winter-2026/vllm_env python /local1/groups/554g13/cse554-winter-2026/vllm_env/vllm/benchmarks/throughput.py --help)",
+      "Bash(PYTHONPATH=/local1/groups/554g13/cse554-winter-2026/vllm_env vllm bench throughput --help)",
+      "Bash(PYTHONPATH=/local1/groups/554g13/cse554-winter-2026/vllm_env /local1/groups/554g13/cse554-winter-2026/vllm_env/bin/vllm bench throughput --help)",
+      "Bash(PYTHONPATH=/local1/groups/554g13/cse554-winter-2026/vllm_env /local1/groups/554g13/cse554-winter-2026/vllm_env/bin/vllm bench throughput --help=all)"
     ]
   }
 }

@@ -1,0 +1,17 @@
+Running vLLM benchmark
+  model=/local1/cse554/models/meta-llama/Llama-3.2-1B
+  input_len=512, output_len=512, num_prompts=100
+/local1/groups/554g13/cse554-winter-2026/vllm_env/vllm/benchmarks/throughput.py:836: UserWarning: Both --input-len and --random-input-len are specified. The random version (--random-input-len) will be preferred in this run.
+  validate_args(args)
+/local1/groups/554g13/cse554-winter-2026/vllm_env/vllm/benchmarks/throughput.py:836: UserWarning: Both --output-len and --random-output-len are specified. The random version (--random-output-len) will be preferred in this run.
+  validate_args(args)
+/local1/groups/554g13/cse554-winter-2026/vllm_env/vllm/benchmarks/throughput.py:836: UserWarning: Both --prefix-len and --random-prefix-len are specified. The random version (--random-prefix-len) will be preferred in this run.
+  validate_args(args)
+When dataset path is not set, it will default to random dataset
+INFO 03-16 16:38:13 [datasets.py:631] Sampling input_len from [1023, 1023] and output_len from [128, 128]
+INFO 03-16 16:38:14 [utils.py:238] non-default args: {'tokenizer': '/local1/cse554/models/meta-llama/Llama-3.2-1B', 'dtype': 'float16', 'enable_lora': None, 'reasoning_parser_plugin': '', 'profiler_config': ProfilerConfig(profiler='torch', torch_profiler_dir='/local1/groups/554g13/cse554-winter-2026/assignment4/Section1/torch_profile', torch_profiler_with_stack=True, torch_profiler_with_flops=False, torch_profiler_use_gzip=True, torch_profiler_dump_cuda_time_total=True, torch_profiler_record_shapes=False, torch_profiler_with_memory=False, ignore_frontend=False, delay_iterations=0, max_iterations=0), 'model': '/local1/cse554/models/meta-llama/Llama-3.2-1B'}
+INFO 03-16 16:38:14 [model.py:531] Resolved architecture: LlamaForCausalLM
+WARNING 03-16 16:38:14 [model.py:1892] Casting torch.bfloat16 to torch.float16.
+INFO 03-16 16:38:14 [model.py:1554] Using max model len 131072
+INFO 03-16 16:38:14 [scheduler.py:231] Chunked prefill is enabled with max_num_batched_tokens=8192.
+INFO 03-16 16:38:14 [vllm.py:747] Asynchronous scheduling is enabled.

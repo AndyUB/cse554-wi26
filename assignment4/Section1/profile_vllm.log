@@ -1,0 +1,6 @@
+Running vLLM benchmark
+  model=/local1/cse554/models/meta-llama/Llama-3.2-1B
+  input_len=512, output_len=512, num_prompts=100
+Traceback (most recent call last):
+  File "<stdin>", line 5, in <module>
+FileNotFoundError: [Errno 2] No such file or directory: '/local1/groups/554g13/cse554-winter-2026/assignment4/Section1/profile_vllm_results.json'
