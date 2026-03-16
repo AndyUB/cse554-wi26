@@ -41,7 +41,6 @@ class Scheduler:
             self.scheduled_prefill_req.append(req)
 
         # Build the list of requests to send to the engine
-        # Decode requests come first so the engine can correctly split them
         request_list_total = self.decode_req + self.scheduled_prefill_req
         decode_num = len(self.decode_req)
 
@@ -57,7 +56,6 @@ class Scheduler:
         for req in self.decode_req:
             tokens_generated = req.current_length - req.prompt_length
             if tokens_generated >= req.output_length:
-                # Free KV cache pages and mark as completed
                 self.engine.kv_cache_map[req.request_id].release()
                 del self.engine.kv_cache_map[req.request_id]
                 self.completed.append(req)

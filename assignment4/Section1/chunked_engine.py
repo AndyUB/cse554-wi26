@@ -246,7 +246,7 @@ class Engine:
                 if idx < num_decode_req:  # decode - feed only *last* token
                     pieces.append(req.output_token_ids[-1:])
                     indptr.append(indptr[-1] + 1)
-                else:                     # prefill - use the scheduled chunk
+                else:                     # prefill
                     pieces.append(req.scheduling_pf_tokens)
                     indptr.append(indptr[-1] + req.scheduling_length)
 

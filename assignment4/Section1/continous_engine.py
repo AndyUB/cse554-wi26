@@ -276,13 +276,10 @@ class Engine:
             # 4) Plan FlashInfer execution for this micro-batch
             # ----------------------------------------------------------------
             num_prefill_req = len(requests) - num_decode_req
-            # Each decode request contributes exactly 1 query token
             num_decode_tokens = num_decode_req
-            # Boundary between decode and prefill pages in the flat kv_indices
             decode_kv_end = kv_indptr[num_decode_req].item()
 
             if num_prefill_req > 0:
-                # qo_indptr and kv_indptr for prefill requests only (zero-based)
                 prefill_qo_indptr = indptr_tensor[num_decode_req:] - indptr_tensor[num_decode_req]
                 prefill_kv_indptr = kv_indptr[num_decode_req:] - kv_indptr[num_decode_req]
                 prefill_kv_indices_slice = kv_indices[decode_kv_end:]
@@ -392,7 +389,6 @@ class Engine:
                     )
                     attn_out[num_decode_tokens:] = prefill_out
 
-                # Flatten head dimension for the output projection
                 attn_out = attn_out.view(total_tokens, self.num_qo_heads * self.head_dim)
 
                 # Residual connection

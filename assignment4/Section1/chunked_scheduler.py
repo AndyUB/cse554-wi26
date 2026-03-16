@@ -58,7 +58,6 @@ class Scheduler:
                 remaining_pending.append(req)
                 continue
 
-            # Slice out the next chunk for this request
             already_processed = req.prompt_length - req.remaining_prefill_tokens
             tokens_this_chunk = min(req.remaining_prefill_tokens, available_budget)
             req.scheduling_pf_tokens = req.prompt_token_ids[
@@ -69,7 +68,6 @@ class Scheduler:
             available_budget -= tokens_this_chunk
 
             self.scheduled_prefill_req.append(req)
-            # If chunked, keep the request in pending_prefill for future iterations
             if not req.last_chunk:
                 remaining_pending.append(req)
 
