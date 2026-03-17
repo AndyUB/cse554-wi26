@@ -1,0 +1,12 @@
+Loading safetensors:   0%|          | 0/12 [00:00<?, ?it/s]Loading safetensors: 100%|██████████| 12/12 [00:00<00:00, 2064.38it/s]
+Benchmarking with 100 requests, batch_size=10
+Input length ~ Uniform[1,10], Output length ~ Uniform[1,128]
+
+[Naive]      Completed 100 requests in 14.582s
+[Continuous] Completed 100 requests in 8.995s
+
+─────────────────────────────────────────────
+Naive scheduling time     : 14.582 s
+Continuous batching time  : 8.995 s
+Speedup (naive / cont.)   : 1.62x
+─────────────────────────────────────────────

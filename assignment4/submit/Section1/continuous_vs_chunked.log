@@ -1,0 +1,12 @@
+  Input  words: mean=379.3, min=103, max=512
+  Output len  : mean=260.3, min=2, max=511
+Loading safetensors:   0%|          | 0/12 [00:00<?, ?it/s]Loading safetensors: 100%|██████████| 12/12 [00:00<00:00, 1992.31it/s]
+[Chunked prefill] 100 requests  |  7.624 s
+Loading safetensors:   0%|          | 0/12 [00:00<?, ?it/s]Loading safetensors: 100%|██████████| 12/12 [00:00<00:00, 2570.30it/s]
+[Continuous]      100 requests  |  28.616 s
+
+──────────────────────────────────────────────────
+Continuous batching time : 28.616 s
+Chunked prefill time     : 7.624 s
+Chunked is 3.75x faster than continuous
+──────────────────────────────────────────────────

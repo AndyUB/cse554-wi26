@@ -1,0 +1,31 @@
+  Input  words: mean=379.3, min=103, max=512
+  Output len  : mean=260.3, min=2, max=511
+Loading safetensors:   0%|          | 0/12 [00:00<?, ?it/s]Loading safetensors: 100%|██████████| 12/12 [00:00<00:00, 2696.72it/s]
+[Chunked prefill] 100 requests  |  8.073 s
+Loading safetensors:   0%|          | 0/12 [00:00<?, ?it/s]Loading safetensors: 100%|██████████| 12/12 [00:00<00:00, 2571.88it/s]
+[Continuous]      100 requests  |  31.938 s
+
+──────────────────────────────────────────────────
+Continuous batching time : 31.938 s
+Chunked prefill time     : 8.073 s
+Chunked is 3.96x faster than continuous
+──────────────────────────────────────────────────
+Raw data saved → iteration_times.json
+Scatter plot saved → iteration_times_scatter.png
+
+───────────────────────────────────────────────────────
+Metric                           Continuous    Chunked
+───────────────────────────────────────────────────────
+  Continuous
+    Iterations   : 2770
+    Mean   (ms)  : 11.52
+    Median (ms)  : 12.18
+    P99    (ms)  : 25.15
+    Max    (ms)  : 133.79
+  Chunked
+    Iterations   : 582
+    Mean   (ms)  : 13.86
+    Median (ms)  : 10.36
+    P99    (ms)  : 24.53
+    Max    (ms)  : 858.41
+───────────────────────────────────────────────────────

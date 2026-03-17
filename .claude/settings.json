@@ -64,7 +64,8 @@
       "Bash(PYTHONPATH=/local1/groups/554g13/cse554-winter-2026/vllm_env CUDA_VISIBLE_DEVICES=6 python3 profile_vllm_breakdown.py)",
       "Bash(CUDA_VISIBLE_DEVICES=6 python3 profile_vllm_breakdown.py)",
       "Bash(python3 parse_nvtx_ranges.py vllm_nsys_ranges.tsv)",
-      "Bash(python3 parse_nsys_events.py vllm_nsys_events.tsv)"
+      "Bash(python3 parse_nsys_events.py vllm_nsys_events.tsv)",
+      "Bash(zip -r submit.zip submit/)"
     ]
   }
 }
