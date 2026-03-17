@@ -1,0 +1,53 @@
+Loading model (enforce_eager=True, no CUDA graphs)...
+INFO 03-16 18:33:16 [utils.py:238] non-default args: {'dtype': 'float16', 'disable_log_stats': True, 'enforce_eager': True, 'disable_custom_all_reduce': True, 'model': '/local1/cse554/models/meta-llama/Llama-3.2-1B'}
+WARNING 03-16 18:33:16 [envs.py:1710] Unknown vLLM environment variable detected: VLLM_LLAMA_TIMING
+WARNING 03-16 18:33:16 [envs.py:1710] Unknown vLLM environment variable detected: VLLM_LLAMA_TIMING_OUT
+WARNING 03-16 18:33:16 [envs.py:1710] Unknown vLLM environment variable detected: VLLM_LLAMA_TIMING_START_FLAG
+WARNING 03-16 18:33:16 [envs.py:1710] Unknown vLLM environment variable detected: VLLM_LLAMA_TIMING_WORKER
+INFO 03-16 18:33:27 [model.py:531] Resolved architecture: LlamaForCausalLM
+WARNING 03-16 18:33:27 [model.py:1892] Casting torch.bfloat16 to torch.float16.
+INFO 03-16 18:33:27 [model.py:1554] Using max model len 131072
+INFO 03-16 18:33:27 [scheduler.py:231] Chunked prefill is enabled with max_num_batched_tokens=8192.
+INFO 03-16 18:33:27 [vllm.py:747] Asynchronous scheduling is enabled.
+WARNING 03-16 18:33:27 [vllm.py:781] Enforce eager set, disabling torch.compile and CUDAGraphs. This is equivalent to setting -cc.mode=none -cc.cudagraph_mode=none
+WARNING 03-16 18:33:27 [vllm.py:792] Inductor compilation was disabled by user settings, optimizations settings that are only active during inductor compilation will be ignored.
+INFO 03-16 18:33:27 [vllm.py:957] Cudagraph is disabled under eager mode
+(EngineCore_DP0 pid=1041746) INFO 03-16 18:33:28 [core.py:101] Initializing a V1 LLM engine (v0.17.1) with config: model='/local1/cse554/models/meta-llama/Llama-3.2-1B', speculative_config=None, tokenizer='/local1/cse554/models/meta-llama/Llama-3.2-1B', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, tokenizer_revision=None, trust_remote_code=False, dtype=torch.float16, max_seq_len=131072, download_dir=None, load_format=auto, tensor_parallel_size=1, pipeline_parallel_size=1, data_parallel_size=1, disable_custom_all_reduce=True, quantization=None, enforce_eager=True, enable_return_routed_experts=False, kv_cache_dtype=auto, device_config=cuda, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_fallback=False, disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='', reasoning_parser_plugin='', enable_in_reasoning=False), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None, kv_cache_metrics=False, kv_cache_metrics_sample=0.01, cudagraph_metrics=False, enable_layerwise_nvtx_tracing=False, enable_mfu_metrics=False, enable_mm_processor_stats=False, enable_logging_iteration_details=False), seed=0, served_model_name=/local1/cse554/models/meta-llama/Llama-3.2-1B, enable_prefix_caching=True, enable_chunked_prefill=True, pooler_config=None, compilation_config={'level': None, 'mode': <CompilationMode.NONE: 0>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': ['all'], 'splitting_ops': [], 'compile_mm_encoder': False, 'compile_sizes': [], 'compile_ranges_split_points': [8192], 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.NONE: 0>, 'cudagraph_num_of_warmups': 0, 'cudagraph_capture_sizes': [], 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': False, 'pass_config': {'fuse_norm_quant': True, 'fuse_act_quant': True, 'fuse_attn_quant': False, 'enable_sp': False, 'fuse_gemm_comms': False, 'fuse_allreduce_rms': False}, 'max_cudagraph_capture_size': 0, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False, 'assume_32_bit_indexing': False}, 'local_cache_dir': None, 'fast_moe_cold_start': True, 'static_all_moe_layers': []}
+(EngineCore_DP0 pid=1041746) INFO 03-16 18:33:31 [parallel_state.py:1393] world_size=1 rank=0 local_rank=0 distributed_init_method=tcp://172.28.1.50:43449 backend=nccl
+(EngineCore_DP0 pid=1041746) INFO 03-16 18:33:31 [parallel_state.py:1715] rank 0 in world size 1 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 0, EP rank N/A, EPLB rank N/A
+(EngineCore_DP0 pid=1041746) INFO 03-16 18:33:32 [base.py:106] Offloader set to NoopOffloader
+(EngineCore_DP0 pid=1041746) INFO 03-16 18:33:32 [gpu_model_runner.py:4281] Starting to load model /local1/cse554/models/meta-llama/Llama-3.2-1B...
+(EngineCore_DP0 pid=1041746) ERROR 03-16 18:33:34 [fa_utils.py:131] Cannot use FA version 2 is not supported due to FA2 is only supported on devices with compute capability >= 8
+(EngineCore_DP0 pid=1041746) INFO 03-16 18:33:34 [cuda.py:405] Using FLASHINFER attention backend out of potential backends: ['FLASHINFER', 'TRITON_ATTN', 'FLEX_ATTENTION'].
+(EngineCore_DP0 pid=1041746) Loading safetensors checkpoint shards:   0% Completed | 0/1 [00:00<?, ?it/s]
+(EngineCore_DP0 pid=1041746) Loading safetensors checkpoint shards: 100% Completed | 1/1 [00:01<00:00,  1.34s/it]
+(EngineCore_DP0 pid=1041746) Loading safetensors checkpoint shards: 100% Completed | 1/1 [00:01<00:00,  1.34s/it]
+(EngineCore_DP0 pid=1041746) 
+(EngineCore_DP0 pid=1041746) INFO 03-16 18:33:37 [default_loader.py:293] Loading weights took 1.40 seconds
+(EngineCore_DP0 pid=1041746) INFO 03-16 18:33:37 [gpu_model_runner.py:4364] Model loading took 2.32 GiB memory and 3.970628 seconds
+(EngineCore_DP0 pid=1041746) INFO 03-16 18:33:41 [gpu_worker.py:424] Available KV cache memory: 18.26 GiB
+(EngineCore_DP0 pid=1041746) INFO 03-16 18:33:41 [kv_cache_utils.py:1314] GPU KV cache size: 598,320 tokens
+(EngineCore_DP0 pid=1041746) INFO 03-16 18:33:41 [kv_cache_utils.py:1319] Maximum concurrency for 131,072 tokens per request: 4.56x
+(EngineCore_DP0 pid=1041746) INFO 03-16 18:33:41 [kernel_warmup.py:69] Warming up FlashInfer attention.
+(EngineCore_DP0 pid=1041746) INFO 03-16 18:33:41 [core.py:282] init engine (profile, create kv cache, warmup model) took 3.56 seconds
+(EngineCore_DP0 pid=1041746) WARNING 03-16 18:33:42 [vllm.py:781] Enforce eager set, disabling torch.compile and CUDAGraphs. This is equivalent to setting -cc.mode=none -cc.cudagraph_mode=none
+(EngineCore_DP0 pid=1041746) WARNING 03-16 18:33:42 [vllm.py:792] Inductor compilation was disabled by user settings, optimizations settings that are only active during inductor compilation will be ignored.
+(EngineCore_DP0 pid=1041746) INFO 03-16 18:33:42 [vllm.py:957] Cudagraph is disabled under eager mode
+INFO 03-16 18:33:42 [llm.py:388] Supported tasks: ['generate']
+Warming up (2 requests)...
+Rendering prompts:   0%|          | 0/2 [00:00<?, ?it/s]Rendering prompts: 100%|██████████| 2/2 [00:00<00:00, 96.23it/s]
+Processed prompts:   0%|          | 0/2 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s]Processed prompts:  50%|█████     | 1/2 [00:05<00:05,  5.25s/it, est. speed input: 97.92 toks/s, output: 97.54 toks/s]Processed prompts: 100%|██████████| 2/2 [00:05<00:00,  5.25s/it, est. speed input: 195.83 toks/s, output: 195.06 toks/s]Processed prompts: 100%|██████████| 2/2 [00:05<00:00,  2.62s/it, est. speed input: 195.83 toks/s, output: 195.06 toks/s]
+Running 100 requests (input=512, output=512)...
+Rendering prompts:   0%|          | 0/100 [00:00<?, ?it/s]Rendering prompts:  99%|█████████▉| 99/100 [00:00<00:00, 981.25it/s]Rendering prompts: 100%|██████████| 100/100 [00:00<00:00, 979.95it/s]
+Processed prompts:   0%|          | 0/100 [00:00<?, ?it/s, est. speed input: 0.00 toks/s, output: 0.00 toks/s]Processed prompts:   1%|          | 1/100 [00:06<10:08,  6.15s/it, est. speed input: 83.56 toks/s, output: 83.24 toks/s]Processed prompts: 100%|██████████| 100/100 [00:06<00:00,  6.15s/it, est. speed input: 8274.60 toks/s, output: 8242.39 toks/s]Processed prompts: 100%|██████████| 100/100 [00:06<00:00, 16.10it/s, est. speed input: 8274.60 toks/s, output: 8242.39 toks/s]
+Wall time: 6.316 s
+Launching benchmark worker subprocess...
+Breakdown saved: /local1/groups/554g13/cse554-winter-2026/assignment4/Section1/profile_vllm_breakdown.json
+
+=== vLLM breakdown (CUDA events, enforce_eager) ===
+Wall time:         6.316 s
+GPU total (timed): 4.884 s
+  attention      2.912 s (59.6% GPU, 46.1% wall)
+  ffn            1.824 s (37.3% GPU, 28.9% wall)
+  norm           0.148 s (3.0% GPU, 2.3% wall)
+  overheads      1.432 s (22.7% wall)

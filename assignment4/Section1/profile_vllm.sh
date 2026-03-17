@@ -35,7 +35,9 @@ nsys profile \
     --output-json "${OUTPUT_JSON}" \
     --disable-detokenize \
     --tensor-parallel-size 1 \
-    --dtype float16
+    --dtype float16 \
+    --enforce-eager \
+    --enable-layerwise-nvtx-tracing
 
 python - <<'PY' "${OUTPUT_JSON}"
 import json

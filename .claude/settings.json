@@ -49,7 +49,22 @@
       "Bash(tee profile_vllm.log)",
       "Bash(nsys --version)",
       "Bash(nsys stats:*)",
-      "Bash(python parse_vllm_nsys.py vllm_nsys_kern_sum_cuda_gpu_kern_sum.csv)"
+      "Bash(python parse_vllm_nsys.py vllm_nsys_kern_sum_cuda_gpu_kern_sum.csv)",
+      "Bash(CUDA_VISIBLE_DEVICES=6 python profile_vllm_breakdown.py)",
+      "Bash(tee profile_vllm_breakdown.log)",
+      "Bash(ls /local1/groups/554g13/cse554-winter-2026/vllm_env/bin/python*)",
+      "Bash(PYTHONPATH=/local1/groups/554g13/cse554-winter-2026/vllm_env CUDA_VISIBLE_DEVICES=6 /usr/bin/python3 -c \"from vllm import LLM; print\\(''''ok''''\\)\")",
+      "Bash(CUDA_VISIBLE_DEVICES=6 /usr/bin/python3 profile_vllm_breakdown.py)",
+      "Bash(ls /local1/groups/554g13/cse554-winter-2026/vllm_env/typing_extensions*)",
+      "Bash(python3 -c \"import typing_extensions; print\\(typing_extensions.__file__, typing_extensions.__version__\\)\")",
+      "Bash(ls /local1/groups/554g13/cse554-winter-2026/vllm_env/scipy*)",
+      "Bash(echo \"no scipy in vllm_env\" python3 -c \"import sys; sys.path.insert\\(0,''''/local1/groups/554g13/cse554-winter-2026/vllm_env''''\\); sys.path=[p for p in sys.path if ''''.venv'''' not in p and ''''.local'''' not in p]; from vllm.benchmarks.throughput import main\")",
+      "Bash(PYTHONPATH=/local1/groups/554g13/cse554-winter-2026/vllm_env python3 -c \"from vllm import LLM\")",
+      "Bash(PYTHONPATH=/local1/groups/554g13/cse554-winter-2026/vllm_env python3 -c \"import sys; print\\(''\\\\n''.join\\(sys.path\\)\\)\")",
+      "Bash(PYTHONPATH=/local1/groups/554g13/cse554-winter-2026/vllm_env CUDA_VISIBLE_DEVICES=6 python3 profile_vllm_breakdown.py)",
+      "Bash(CUDA_VISIBLE_DEVICES=6 python3 profile_vllm_breakdown.py)",
+      "Bash(python3 parse_nvtx_ranges.py vllm_nsys_ranges.tsv)",
+      "Bash(python3 parse_nsys_events.py vllm_nsys_events.tsv)"
     ]
   }
 }

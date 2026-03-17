@@ -1,0 +1,33 @@
+{
+  "backend": "vllm_eager",
+  "timing_source": "cuda_events_in_llama_decoder_layer",
+  "wall_time_s": 6.316103023011237,
+  "gpu_total_s": 4.883748958739452,
+  "breakdown": {
+    "attention": {
+      "gpu_time_s": 2.9123710071742535,
+      "pct_of_gpu": 59.63392123099561,
+      "pct_of_wall": 46.11025178917624
+    },
+    "ffn": {
+      "gpu_time_s": 1.8238054711073637,
+      "pct_of_gpu": 37.344373892185224,
+      "pct_of_wall": 28.87548642672162
+    },
+    "norm": {
+      "gpu_time_s": 0.1475724804578349,
+      "pct_of_gpu": 3.0217048768191583,
+      "pct_of_wall": 2.3364482802162856
+    },
+    "overheads": {
+      "wall_time_s": 1.4323540642717854,
+      "pct_of_wall": 22.67781350388586
+    }
+  },
+  "engine_timing_ms": {
+    "norm": 147.5724804578349,
+    "attention": 2912.3710071742535,
+    "ffn": 1823.8054711073637,
+    "total": 4883.748958739452
+  }
+}
