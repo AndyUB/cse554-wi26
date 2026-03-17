@@ -81,9 +81,9 @@ def run_one_iteration(input_ids, rank, world_size):
         # hint: use rank, local_q_heads, local_kv_heads, head_dim to figure out the correct slice
         # hint: to debug, compare the intermediate outputs with the original implementation in transformer-w3l1.py
         
-        # q = 
-        # k = 
-        # v = 
+        q = torch.matmul(x, self_attn_q_proj_weight[layer][rank * local_q_heads * head_dim : (rank + 1) * local_q_heads * head_dim, :].transpose(0, 1))
+        k = torch.matmul(x, self_attn_k_proj_weight[layer][rank * local_kv_heads * head_dim : (rank + 1) * local_kv_heads * head_dim, :].transpose(0, 1))
+        v = torch.matmul(x, self_attn_v_proj_weight[layer][rank * local_kv_heads * head_dim : (rank + 1) * local_kv_heads * head_dim, :].transpose(0, 1))
 
         # Apply rotary position embeddings
         apply_rope(q, output=q, head_dim=head_dim, offset=0)
@@ -111,11 +111,11 @@ def run_one_iteration(input_ids, rank, world_size):
         # TODO: generate the o_proj_local vector
         # assuming that the weights of o_proj are split in a row-wise manner
         # hint: use rank, local_hidden_dim to figure out the correct slice
-        # o_proj_local = 
+        o_proj_local = torch.matmul(attn_output, o_proj_weight[layer][:, rank * local_hidden_dim : (rank + 1) * local_hidden_dim].transpose(0, 1))
         
         # TODO: perform the all-reduce operation
         # hint: use dist.all_reduce 
-        
+        dist.all_reduce(o_proj_local, op=dist.ReduceOp.SUM)
         o_proj_residual = o_proj_local + hidden_state  # Add residual
 
         # --- Part 2 Implement the feedforward block ---
@@ -127,17 +127,18 @@ def run_one_iteration(input_ids, rank, world_size):
         # TODO: generate the up_local and gate_local vectors
         # assuming that the weights of up_proj and gate_proj are split in a column-wise manner
         # hint: use rank, local_intermediate_dim to figure out the correct slice
-        # up_local = 
-        # gate_local = 
+        up_local = ffn_input.matmul(up_proj_weight[layer][rank * local_intermediate_dim : (rank + 1) * local_intermediate_dim, :].transpose(0, 1))
+        gate_local = ffn_input.matmul(gate_proj_weight[layer][rank * local_intermediate_dim : (rank + 1) * local_intermediate_dim, :].transpose(0, 1))
 
         # SwiGLU activation (SiLU * linear)
         activation_output = up_local * F.silu(gate_local)
 
         # TODO: generate the down_local vector
         # assuming that the weights of down_proj are split in a row-wise manner
-        # down_local = 
+        down_local = activation_output.matmul(down_proj_weight[layer][:, rank * local_intermediate_dim : (rank + 1) * local_intermediate_dim].transpose(0, 1))
 
         # TODO: perform the all-reduce operation
+        dist.all_reduce(down_local, op=dist.ReduceOp.SUM)
 
         # Add residual
         hidden_state = down_local + o_proj_residual
